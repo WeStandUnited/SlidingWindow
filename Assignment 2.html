@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <title>Assignment 2</title>
+  </head>
+
+  <body>
+    <h1>Assignment 2</h1>
+
+    Write a file transfer program. To demonstrate, you'll need a client
+    and a server program, doing the obvious.
+
+
+    <ul>
+      <li> The server awaits connections.
+      </li><li> A client connects, and indicates the name of a file to
+        upload or download.
+      </li><li> The client sends or receives the file.
+    </li></ul>
+    <p>
+
+    </p><p>
+    Wherever applicable, use the commands and protocol for TFTP
+    <a href="https://tools.ietf.org/html/rfc1350"> (IETF RFC
+    1350)</a>, with the following modifications. You will need to
+    design and use additional packet header information than that in
+    TFTP; use the IETF
+    2347 <a href="https://tools.ietf.org/html/rfc2347"> TFTP Options
+    Extension</a> when possible.
+    </p><ul>
+      <li> Use TCP-style sliding windows rather than the sequential
+      acks used in TFTP. Test with at two different max window sizes.
+      </li><li> Arrange that each session begins with a (random) number
+        exchange to generate a key that is used for encrypting
+        data. You can just use Xor to create key, or anything better.
+      </li><li> Support only binary (octet) transmission.
+      </li><li> Support a command line argument specifiying
+      whether packets are IPv4 vs IPv6 UDP datagrams
+      </li><li> Support a command line argument controlling whether
+      to pretend to drop 1 percent of the packets; 
+    </li></ul>
+    
+    Create a web page showing throughput across varying conditions: V4
+    vs V6; different window sizes; drops vs no drops; upload vs
+    download.
+
+    <hr>
+    <address><a href="http://gee.cs.oswego.edu/dl">Doug
+    Lea</a></address>
+  
+
+</body></html>
