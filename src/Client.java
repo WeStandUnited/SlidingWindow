@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Random;
-
+import java.math.*;
 
 public class Client {
 
@@ -18,7 +18,7 @@ public class Client {
     static int PORT;
     static Inet4Address HOSTv4;
     static Inet6Address HOSTv6;
-
+    private int xor_key;
 
     public Client(int port,String host) throws UnknownHostException, SocketException {
 
@@ -29,29 +29,34 @@ public class Client {
 
 
 
-    public boolean Auth()  {
-        try {
-            Random r = new Random();
-            //Send Server SYN(Syn is just a random number)
-            int synnum = r.nextInt(500);
-            System.out.println("NumSent:"+synnum);
-            ByteBuffer buff = ByteBuffer.allocate(4);// 4 bytes is one int
-            buff.putInt(synnum);
+    public int Auth() throws IOException {
+        Random r = new Random();
 
-            byte[] b = buff.array();
-            DatagramPacket send = new DatagramPacket(b, b.length, HOSTv4, PORT);
-            buff.flip();
-            sock.send(send);
-            System.out.println("Packet Sent!");
+        int p = r.nextInt(600);//Public Modulo
+        int g= r.nextInt(600);//Public base
+        int a = r.nextInt(600);//Secret number
+        int A = (int) Math.pow(g,a) % p;
+
+        ByteBuffer buff = ByteBuffer.allocate(12);// Stuffing are byte buffer
+        buff.putInt(p);
+        System.out.println("Modulo:"+p);
+        buff.putInt(g);
+        System.out.println("Base:"+g);
+        buff.putInt(A);
+        System.out.println("Computed:"+A);
+        buff.flip();
+
+
+        DatagramPacket SYN  = new DatagramPacket(buff.array(),buff.array().length,HOSTv4,PORT);
+        sock.send(SYN);
 
 
 
-            return true;
 
-        }catch (IOException e){
-            e.printStackTrace();
-            return false;
-        }
+
+
+
+        return 0;
     }
 
 
@@ -75,7 +80,7 @@ public class Client {
     }
 
 
-    public static void main(String[] args) throws UnknownHostException, SocketException {
+    public static void main(String[] args) throws IOException {
         Client c = new Client(2770,"localhost");
 
         c.Auth();

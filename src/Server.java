@@ -30,20 +30,33 @@ public class Server {
     }
 
 
-    public boolean Auth() throws IOException {
+    public int Auth() throws IOException {
         Random r = new Random();
+        int p;//Modulo num
+        int g;//base
+        int b = r.nextInt(600);
+        int A;
+        ByteBuffer buff = ByteBuffer.allocate(12);
 
-        int ACK = r.nextInt(500);//MAke ACK number
 
-        byte[] ACK_SYN_Staging = new byte[4];
-
-        DatagramPacket SYN = new DatagramPacket(ACK_SYN_Staging,ACK_SYN_Staging.length);
+        DatagramPacket SYN = new DatagramPacket(buff.array(),buff.array().length);
 
         serverSocket.receive(SYN);
-        System.out.println("Packet Recieved!");
+        buff.put(SYN.getData());
+        buff.flip();
+        p = buff.getInt();
+        System.out.println("Modulo:"+p);
+        g = buff.getInt();
+        System.out.println("Base:"+g);
+        A = buff.getInt();
+        System.out.println("Computed:"+A);
+
+        int B = (int) Math.pow(g,b) % p;
 
 
-        return true;
+
+
+        return 0;
     }
 
     public static void main(String[] args) throws IOException {
