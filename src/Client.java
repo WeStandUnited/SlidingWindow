@@ -6,6 +6,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.math.*;
+import java.util.Scanner;
 
 public class Client {
 
@@ -14,6 +15,7 @@ public class Client {
     DataInputStream in = null;
     DataOutputStream out = null;
 
+    SlidingWindow window;
 
     static int WINDOW_SIZE;
     static int STATE;
@@ -28,11 +30,31 @@ public class Client {
     static Inet6Address HOSTv6;
     private int xor_key;
 
-    public Client(int port,String host) throws UnknownHostException, SocketException {
+    public Client(int port,String host,int size,boolean uploading,String file_name,boolean V6orV4) throws IOException {
 
         PORT = port;
+
         HOSTv4 = (Inet4Address) Inet4Address.getByName(host);
+        HOSTv6 = (Inet6Address) Inet6Address.getByName(host);
         sock = new DatagramSocket();
+
+        WINDOW_SIZE = size;
+
+        window = new SlidingWindow(WINDOW_SIZE,file_name,uploading);
+
+
+
+
+
+
+
+
+
+
+        //window = new SlidingWindow(WINDOW_SIZE);
+
+
+
     }
 
 
@@ -86,6 +108,12 @@ public class Client {
     }
 
 
+    private byte [] encrpyt(byte [] b){
+        //xor_key is the var that AUTH gets
+
+        return b;//TODO wrtie XOR encrpytor
+    }
+
 
     public void Send(File f){
 
@@ -107,8 +135,15 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-        Client c = new Client(2770,"localhost");
 
-        c.Auth();
+
+                     //Client(int port,String host,int size,boolean uploading,String file_name,boolean V6orV4)
+        Client c = new Client(Integer.parseInt(args[0]),args[1],Integer.parseInt(args[2]),Boolean.parseBoolean(args[3]),args[4],Boolean.parseBoolean(args[5]));
+
+        //eg command: java Client.class 2770 localhost 100 true me.txt true true
+
+        //c.xor_key = c.Auth();
+
+
     }
 }
