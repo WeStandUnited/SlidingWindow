@@ -27,10 +27,5 @@ public class NumberGen {
 
     public static void main(String[] args) {
         //testing area
-
-        int i = (int) Math.pow(5,3) % 23;
-
-        System.out.println(i);
-
     }
 }

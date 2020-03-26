@@ -17,7 +17,7 @@ public class Server {
 
     static int PORT;
     private int encrpytNum;
-
+    byte opcode;
 
 
     public Server(int port) throws IOException {
@@ -38,8 +38,10 @@ public class Server {
         int A;
         ByteBuffer buff = ByteBuffer.allocate(12);
         ByteBuffer Ack_Buff = ByteBuffer.allocate(4);
-
+        ByteBuffer opcode_buff = ByteBuffer.allocate(1);
         DatagramPacket SYN = new DatagramPacket(buff.array(),buff.array().length);
+        DatagramPacket opcode_packet = new DatagramPacket(opcode_buff.array(),opcode_buff.array().length);
+
 
         serverSocket.receive(SYN);
         buff.put(SYN.getData());
@@ -64,9 +66,6 @@ public class Server {
 
 
         System.out.println("Key:"+s);
-
-
-
 
         return s;
     }

@@ -1,7 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -13,35 +10,35 @@ public class Client {
 
     DatagramSocket sock =null;
     DataInputStream in = null;
-    DataOutputStream out = null;
 
     SlidingWindow window;
 
     static int WINDOW_SIZE;
-    static int STATE;
-    // STATE TABLE:
-    //0 = READ
-    //1 = WRITE
-    //2 = TERMINATE
 
 
     static int PORT;
-    static Inet4Address HOSTv4;
-    static Inet6Address HOSTv6;
-    private int xor_key;
+    static Inet4Address HOSTv4 = null;
+    static Inet6Address HOSTv6 = null;
 
-    public Client(int port,String host,int size,boolean uploading,String file_name,boolean V6orV4) throws IOException {
+    public Client(int port,String host,int size,boolean uploading,String file_name,boolean V6) throws IOException {
 
         PORT = port;
 
-        HOSTv4 = (Inet4Address) Inet4Address.getByName(host);
-        HOSTv6 = (Inet6Address) Inet6Address.getByName(host);
+        if (V6){
+            HOSTv6 = (Inet6Address) Inet6Address.getByName(host);
+        }else {
+            HOSTv4 = (Inet4Address) Inet6Address.getByName(host);
+
+        }
+
+
         sock = new DatagramSocket();
 
         WINDOW_SIZE = size;
 
-        window = new SlidingWindow(WINDOW_SIZE,file_name,uploading);
 
+
+            window = new SlidingWindow(WINDOW_SIZE,file_name);
 
 
 
@@ -59,6 +56,7 @@ public class Client {
 
 
 
+
     public int Auth() throws IOException {
         Random r = new Random();
 
@@ -67,6 +65,7 @@ public class Client {
         int secret_num = r.nextInt(600);//Secret number
         int A = (int) Math.pow(base,secret_num) % mod_num;
 
+        ByteBuffer opcodeBuff = ByteBuffer.allocate(1);
         ByteBuffer buff = ByteBuffer.allocate(12);// Stuffing are byte buffer
 
         ByteBuffer ACK_Buff = ByteBuffer.allocate(4);
@@ -96,8 +95,6 @@ public class Client {
 
         int s = (int)Math.pow(B,secret_num) % mod_num;
         System.out.println("Key:"+s);
-
-
 
 
 

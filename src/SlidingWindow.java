@@ -8,32 +8,17 @@ public class SlidingWindow {
 
 
 
+
     DatagramPacket [] Send;
     DatagramPacket [] Recieve;
 
 
 
-
-    public SlidingWindow (int size, String file,boolean uploading) throws IOException {
+    public SlidingWindow (int size, String file) throws IOException {
 
         Send = new DatagramPacket[size];
         Recieve = new DatagramPacket[size];
 
-
-        if (uploading){
-            // I am uploading
-            File f = new File(file);
-
-
-
-
-        }else{
-            //I am Downloading
-            File f = new File(file);
-            f.createNewFile();
-
-
-        }
 
 
 
@@ -42,8 +27,11 @@ public class SlidingWindow {
     }
 
 
+
+
+
     public static void main(String[] args) throws IOException {
-        SlidingWindow sl = new SlidingWindow(10,"hello.txt",false);
+        SlidingWindow sl = new SlidingWindow(10,"hello.txt");
 
 
     }
