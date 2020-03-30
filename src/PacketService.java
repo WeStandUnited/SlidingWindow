@@ -227,7 +227,7 @@ public class PacketService {
     // Fill RWRQ Packet
 
 
-    public int Unpack_Request(byte[] raw_packet, int opcode) {
+    public int Unpack_Request(byte[] raw_packet, int opcode) throws IOException {
 
         int mode = 0;
 
@@ -238,16 +238,22 @@ public class PacketService {
         buffer.flip();
 
         windowSize = buffer.getShort();
+        byte[] b = new byte[255];
 
+        buffer.get(b);
+        String name = new String(b).trim();
+
+        file = new File(name);
         if (opcode == 1) {
             // i wanna read from you
             //Downloading
-            byte[] b = new byte[255];
-
-            buffer.get(b);
-
-            file = new File(new String(b));
+            if (file.createNewFile()) {
+                System.out.println("File created: " + file.getName());
+            } else {
+                System.out.println("File already exists.");
+            }
             mode = 1;
+
 
         } else if (opcode == 2) {
             //i wanna write a file to you
@@ -319,7 +325,7 @@ public class PacketService {
         DatagramPacket packet = null;
 
         ByteBuffer buffer = ByteBuffer.allocate(4);
-        buffer.putShort((short) 4);
+        buffer.putShort((short) 4);//opcode
         buffer.putShort(BlockNum);
         buffer.flip();
 

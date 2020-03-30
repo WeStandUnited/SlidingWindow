@@ -3,48 +3,59 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+
+
 
 
 public class SlidingWindow {
 
+
+
+
     int mode;
     int size;
-    ArrayList<DatagramPacket> send;
-    ArrayList<DatagramPacket> recieve;
+    ArrayList<DatagramPacket> Data_Buffer;
+    DatagramPacket [] send;
+    DatagramPacket [] recieve;
+    PacketService ps;
 
-
-
-    public SlidingWindow (int size,int mode) throws IOException {
+    public SlidingWindow (int size,int m,PacketService packetService) throws IOException {
         size = this.size;
-        send =  new ArrayList<DatagramPacket>(size);
-        recieve =  new ArrayList<DatagramPacket>(size);
 
-        mode = this.mode;
+        send =  new DatagramPacket[size];
 
+        recieve =   new DatagramPacket[size];
 
-    }
+        mode = m;
 
-    public void add(){
+        ps = packetService;
 
-    }
-    public static <T> List<T> shift(List<T> aL, int shift) {
-        List<T> newValues = new ArrayList<>(aL);
-        Collections.rotate(newValues, shift);
+        int file_length = (int) ps.file.length() / 512;
 
-        return newValues;
-    }
-    public static void main(String[] args) {
+        Data_Buffer = new ArrayList<DatagramPacket>(file_length);
 
-        String [] strs = { null, null, "C",
-                "D", "E", "F", "G" };
-        ArrayList<String> stringL = new ArrayList<String>(Arrays.asList(strs));
+        if (mode == 1) {
+            for (int i = 0; i < file_length; i++) {
 
-        System.out.println(shift(stringL,5));
+                ps.Fill_Data((short) i);
+                System.out.println("Block:"+i);
+
+            }
+        }
 
     }
 
+    public void movewindow(){
+
+        for (int i=0;i<size;i++){
+
+            send[i] = null;
+            recieve[i] = null;
+
+      }
+
+
+    }
 
 
 }

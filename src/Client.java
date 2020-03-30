@@ -109,8 +109,11 @@ public class Client {
             ps.MODE = 1;
 
         }
+
         ps.windowSize = 10;// we change this to input later
-        SlidingWindow window = new SlidingWindow(10,ps.MODE);//Size must be from Client
+
+
+        SlidingWindow window = new SlidingWindow(10,ps.MODE,ps);//Size must be from Client
 
 
 

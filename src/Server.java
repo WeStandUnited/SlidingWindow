@@ -84,12 +84,13 @@ public class Server {
         ps.Handler(ps.PacketUtilRecieve(p));
         //ps.MODE     // READ
         //ps.MODE = 2 // WRITE
+
         if (ps.MODE == 1){
             System.out.println("[SET-MODE]: Uploading");
         }else if (ps.MODE == 2)System.out.println("[SET-MODE]: Downloading");
 
 
-        SlidingWindow window = new SlidingWindow(10,ps.MODE);//Size must be from Client
+        SlidingWindow window = new SlidingWindow(10,ps.MODE,ps);//Size must be from Client
 
 
 
