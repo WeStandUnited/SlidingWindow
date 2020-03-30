@@ -92,23 +92,30 @@ public class Client {
         Client c = new Client(2770,"localhost",100,true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
-        ps.file = new File("file.txt");
         System.out.println("Done!");
         Scanner scan = new Scanner(System.in);
-        System.out.println("Uploading or Downloading?:");
+        System.out.println("Downloading from Server or Uploading to Server?:");
         String updown= scan.nextLine();
+        String file_name = "file.txt";//NOTE THIS IS TEMP
+        //String file_name = scan.nextLine();
+        ps.file = new File(file_name);
 
-        if (updown.equalsIgnoreCase("uploading")){
-
-            ps.PacketUtil_W_Request();
-            ps.MODE = 2;
-
-        }else if(updown.equalsIgnoreCase("downloading")){
-
+        //Mode 1 : I AM READING FROM HOST
+        //Mode 2 : I AM BEING READ FROM
+        if (updown.equalsIgnoreCase("downloading")){
             ps.PacketUtil_R_Request();
+
             ps.MODE = 1;
 
+        }else if(updown.equalsIgnoreCase("uploading")){
+
+            ps.PacketUtil_W_Request();
+
+            ps.MODE = 2;
+
         }
+        System.out.println("Mode:"+ps.MODE);
+
 
         ps.windowSize = 10;// we change this to input later
 

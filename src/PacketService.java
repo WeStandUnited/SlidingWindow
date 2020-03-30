@@ -48,6 +48,9 @@ public class PacketService {
     int PORT;
     private int XOR;
     int MODE;
+    //Mode 1 : I AM READING FROM HOST
+    //Mode 2 : I AM BEING READ FROM
+
     int windowSize;
 
     public PacketService(DatagramSocket sock,boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
@@ -117,6 +120,7 @@ public class PacketService {
         Fill_Error((short) 1,"IO Excpetion");
 
     }
+
 
     public void PacketUtil_W_Request(){
         try {
@@ -230,6 +234,8 @@ public class PacketService {
     public int Unpack_Request(byte[] raw_packet, int opcode) throws IOException {
 
         int mode = 0;
+        //Mode 1 : I AM READING FROM HOST
+        //Mode 2 : I AM BEING READ FROM
 
         ByteBuffer buffer = ByteBuffer.allocate(2 +2 + 255);// 2 bytes is for the opcode|2 bytes for Window Size| 255 bytes is max length for name in Linux and Windows|
 
@@ -245,19 +251,15 @@ public class PacketService {
 
         file = new File(name);
         if (opcode == 1) {
-            // i wanna read from you
-            //Downloading
+            //Mode 1 : I AM READING FROM HOST
             if (file.createNewFile()) {
                 System.out.println("File created: " + file.getName());
             } else {
                 System.out.println("File already exists.");
             }
             mode = 1;
-
-
         } else if (opcode == 2) {
-            //i wanna write a file to you
-            //uploading
+            //Mode 2 : I AM BEING READ FROM
             mode = 2;
 
         }

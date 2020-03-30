@@ -82,12 +82,15 @@ public class Server {
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
 
         ps.Handler(ps.PacketUtilRecieve(p));
-        //ps.MODE     // READ
+        //ps.MODE =  1 // READ
         //ps.MODE = 2 // WRITE
+        //Mode 1 : I AM READING FROM HOST
+        //Mode 2 : I AM BEING READ FROM
+        System.out.println("Mode:"+ps.MODE);
 
         if (ps.MODE == 1){
-            System.out.println("[SET-MODE]: Uploading");
-        }else if (ps.MODE == 2)System.out.println("[SET-MODE]: Downloading");
+            System.out.println("[SET-MODE]: Downloading from Client");
+        }else if (ps.MODE == 2)System.out.println("[SET-MODE]: Downloading to Client");
 
 
         SlidingWindow window = new SlidingWindow(10,ps.MODE,ps);//Size must be from Client
