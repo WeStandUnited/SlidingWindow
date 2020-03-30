@@ -5,6 +5,7 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 
 public class Server {
 
@@ -73,7 +74,26 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         Server s =new Server(2770,false);
-        PacketService ps = new PacketService(s.V6,false,s.address,PORT,s.Auth());
+        if (s.serverSocket.isConnected()) System.out.println("Client Connected!");
+        PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,s.Auth());
+        System.out.println("Authing!");
+        ByteBuffer buffer = ByteBuffer.allocate(257);
+
+        DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
+
+        ps.Handler(ps.PacketUtilRecieve(p));
+        //ps.MODE     // READ
+        //ps.MODE = 2 // WRITE
+        if (ps.MODE == 1){
+            System.out.println("[SET-MODE]: Uploading");
+        }else if (ps.MODE == 2)System.out.println("[SET-MODE]: Downloading");
+
+
+        SlidingWindow window = new SlidingWindow(10,ps.MODE);//Size must be from Client
+
+
+
+
 
 
     }

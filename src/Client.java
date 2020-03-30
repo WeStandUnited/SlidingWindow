@@ -20,7 +20,7 @@ public class Client {
     static Inet4Address HOSTv4 = null;
     static Inet6Address HOSTv6 = null;
 
-    public Client(int port,String host,int size,boolean uploading,String file_name,boolean V6) throws IOException {
+    public Client(int port,String host,int size,boolean uploading,boolean V6) throws IOException {
 
         PORT = port;
         V6 = this.V6;
@@ -31,28 +31,7 @@ public class Client {
             HOSTv4 = (Inet4Address) Inet6Address.getByName(host);
 
         }
-
-
         sock = new DatagramSocket();
-
-        WINDOW_SIZE = size;
-
-
-
-            window = new SlidingWindow(WINDOW_SIZE,file_name);
-
-
-
-
-
-
-
-
-
-        //window = new SlidingWindow(WINDOW_SIZE);
-
-
-
     }
 
 
@@ -106,41 +85,33 @@ public class Client {
     }
 
 
-    private byte [] encrpyt(byte [] b){
-        //xor_key is the var that AUTH gets
-
-        return b;//TODO wrtie XOR encrpytor
-    }
-
-
-    public void Send(File f){
-
-
-
-
-    }
-
-
-    public void Receive(){
-
-
-
-
-
-
-
-    }
-
-
     public static void main(String[] args) throws IOException {
 
 
-                     //Client(int port,String host,int size,boolean uploading,String file_name,boolean V6orV4)
-        //Client c = new Client(Integer.parseInt(args[0]),args[1],Integer.parseInt(args[2]),Boolean.parseBoolean(args[3]),args[4],Boolean.parseBoolean(args[5]));
-        Client c = new Client(2770,"localhost",100,true,"file.txt",true);
-        //eg command: java Client.class 2770 localhost 100 true me.txt true true
 
-        PacketService ps = new PacketService(c.V6,false,HOSTv4,PORT,c.Auth());
+        Client c = new Client(2770,"localhost",100,true,true);
+        System.out.println("[Authing]");
+        PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
+        ps.file = new File("file.txt");
+        System.out.println("Done!");
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Uploading or Downloading?:");
+        String updown= scan.nextLine();
+
+        if (updown.equalsIgnoreCase("uploading")){
+
+            ps.PacketUtil_W_Request();
+            ps.MODE = 2;
+
+        }else if(updown.equalsIgnoreCase("downloading")){
+
+            ps.PacketUtil_R_Request();
+            ps.MODE = 1;
+
+        }
+        ps.windowSize = 10;// we change this to input later
+        SlidingWindow window = new SlidingWindow(10,ps.MODE);//Size must be from Client
+
 
 
 

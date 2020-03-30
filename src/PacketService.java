@@ -39,7 +39,7 @@ public class PacketService {
         */
 
 
-    public static File file;
+    File file;
     DatagramSocket datagramSocket;
     boolean V6_Mode;
     boolean PacketLossMode;
@@ -48,7 +48,7 @@ public class PacketService {
     int PORT;
     private int XOR;
     int MODE;
-
+    int windowSize;
 
     public PacketService(DatagramSocket sock,boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
         /*
@@ -57,7 +57,9 @@ public class PacketService {
         Host [TYPE InetAddress]: Host will be casted to V4 or V6 address , based on V6
         port [TYPE port]: port number
         XOR  [TYPE int ]: XOR is the key we get from Auth to tell us by what factor we should XOR bytes
+        windowSize [TYPE int]: Size of sliding window
         */
+
 
         V6_Mode = V6;
         datagramSocket = sock;
@@ -71,6 +73,7 @@ public class PacketService {
         } else Hostv4 = (Inet4Address) Host;
 
         PORT = port;
+
 
     }
 
@@ -98,14 +101,16 @@ public class PacketService {
 
 
     }
-    public void PacketUtilRecieve(DatagramPacket p){
+    public DatagramPacket PacketUtilRecieve(DatagramPacket p){
 
         try {
             datagramSocket.receive(p);
+            return p;
         } catch (IOException e) {
             PacketUtilSendError();
             e.printStackTrace();
         }
+        return null;
     }
 
     public void PacketUtilSendError(){
@@ -115,7 +120,7 @@ public class PacketService {
 
     public void PacketUtil_W_Request(){
         try {
-            datagramSocket.send(Fill_Request(file.getName(), (short) 1));
+            datagramSocket.send(Fill_Request(file.getName(),(short)1,windowSize));
         } catch (IOException e) {
             PacketUtilSendError();
             e.printStackTrace();
@@ -124,7 +129,7 @@ public class PacketService {
 
     public void PacketUtil_R_Request(){
         try {
-            datagramSocket.send(Fill_Request(file.getName(), (short) 2));
+            datagramSocket.send(Fill_Request(file.getName(),(short)2,windowSize));
         } catch (IOException e) {
             PacketUtilSendError();
             e.printStackTrace();
@@ -146,19 +151,20 @@ public class PacketService {
 
         // Sends it to the appropriate unPack Function
 
-
+        int data_size = p.getLength();
         //Read first 2 bytes from packet
 
         byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
 
-        byte[] opcode = {raw_packet[0], raw_packet[2]};
+
 
         //switch statement telling the bytes to
 
-        ByteBuffer buff = ByteBuffer.allocate(2).put(opcode).flip();
+        ByteBuffer buff = ByteBuffer.allocate(data_size);
+        buff.put(raw_packet);
+        buff.flip();
 
         short code = buff.getShort();
-
         /*  1     Read request (RRQ)
             2     Write request (WRQ)
             3     Data (DATA)
@@ -196,12 +202,14 @@ public class PacketService {
 
     // Fill RWRQ Packet
 
-    public DatagramPacket Fill_Request(String Filename, short mode) {
+    public DatagramPacket Fill_Request(String Filename, short mode,int size) {
         DatagramPacket packet = null;
 
-        ByteBuffer buff = ByteBuffer.allocate(2 + 255);
+        ByteBuffer buff = ByteBuffer.allocate(2 + 2+ 255 );//Opcode + Window Length + Name
 
         buff.putShort((short) mode);
+
+        buff.putShort((short) size);
 
         buff.put(Filename.getBytes());
 
@@ -223,11 +231,13 @@ public class PacketService {
 
         int mode = 0;
 
-        ByteBuffer buffer = ByteBuffer.allocate(2 + 255);// 2 bytes is for the opcode| 255 bytes is max length for name in Linux and Windows|
+        ByteBuffer buffer = ByteBuffer.allocate(2 +2 + 255);// 2 bytes is for the opcode|2 bytes for Window Size| 255 bytes is max length for name in Linux and Windows|
 
         buffer.put(raw_packet);// need hash her to XOR it back
 
         buffer.flip();
+
+        windowSize = buffer.getShort();
 
         if (opcode == 1) {
             // i wanna read from you
@@ -246,8 +256,6 @@ public class PacketService {
 
         }
 
-
-        // Probably want to make global for client / Server to read to understand if they are Writer or Reader
 
 
         return mode;
@@ -389,8 +397,8 @@ public class PacketService {
 
     //Testing Area
     public static void main(String[] args) throws IOException {
-        file = new File("file.txt");
-        PacketService n = new PacketService(false, false, InetAddress.getByName("localhost"), 2770, 12);
+        //file = new File("file.txt");
+        //PacketService n = new PacketService(false, false, InetAddress.getByName("localhost"), 2770, 12);
     }
 
 
