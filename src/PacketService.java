@@ -8,27 +8,7 @@ import java.util.Scanner;
 
 
 public class PacketService {
-
-
-    public static File file;
-
-    boolean V6_Mode;
-    boolean PacketLossMode;
-    Inet4Address Hostv4;
-    Inet6Address Hostv6;
-    int PORT;
-    private int XOR;
-    int MODE;
-
-
-    public PacketService(boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
-        /*
-        V6 [TYPE:boolean]: Are the packets V6 or not?
-        PackelossMode [TYPE boolean]: PacketLossMode if true enable's 1% packet loss
-        Host [TYPE InetAddress]: Host will be casted to V4 or V6 address , based on V6
-        port [TYPE port]: port number
-        XOR  [TYPE int ]: XOR is the key we get from Auth to tell us by what factor we should XOR bytes
-
+ /*
         This class will have the ability to :
 
         -Fill & UnPack :
@@ -45,8 +25,7 @@ public class PacketService {
 
          -Write to a file
 
-
-         -Alert Server and or Client if they are Uploading or Downloading
+         -Send and Receive Packets
 
 
          NOTES :
@@ -57,12 +36,31 @@ public class PacketService {
 
             Error messsages I've changed to 255 bytes which is more than enough.
 
-
         */
 
 
-        V6_Mode = V6;
+    public static File file;
+    DatagramSocket datagramSocket;
+    boolean V6_Mode;
+    boolean PacketLossMode;
+    Inet4Address Hostv4;
+    Inet6Address Hostv6;
+    int PORT;
+    private int XOR;
+    int MODE;
 
+
+    public PacketService(DatagramSocket sock,boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
+        /*
+        V6 [TYPE:boolean]: Are the packets V6 or not?
+        PackelossMode [TYPE boolean]: PacketLossMode if true enable's 1% packet loss
+        Host [TYPE InetAddress]: Host will be casted to V4 or V6 address , based on V6
+        port [TYPE port]: port number
+        XOR  [TYPE int ]: XOR is the key we get from Auth to tell us by what factor we should XOR bytes
+        */
+
+        V6_Mode = V6;
+        datagramSocket = sock;
         XOR = this.XOR;
 
         PacketLossMode = this.PacketLossMode;
@@ -86,6 +84,60 @@ public class PacketService {
 
         return b;
     }
+
+    public void PacketUtilSend(DatagramPacket p,DatagramSocket datagramSocket){
+
+        try {
+            datagramSocket.send(p);
+
+        } catch (IOException e) {
+            PacketUtilSendError();
+            e.printStackTrace();
+
+        }
+
+
+    }
+    public void PacketUtilRecieve(DatagramPacket p){
+
+        try {
+            datagramSocket.receive(p);
+        } catch (IOException e) {
+            PacketUtilSendError();
+            e.printStackTrace();
+        }
+    }
+
+    public void PacketUtilSendError(){
+        Fill_Error((short) 1,"IO Excpetion");
+
+    }
+
+    public void PacketUtil_W_Request(){
+        try {
+            datagramSocket.send(Fill_Request(file.getName(), (short) 1));
+        } catch (IOException e) {
+            PacketUtilSendError();
+            e.printStackTrace();
+        }
+    }
+
+    public void PacketUtil_R_Request(){
+        try {
+            datagramSocket.send(Fill_Request(file.getName(), (short) 2));
+        } catch (IOException e) {
+            PacketUtilSendError();
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+
+
 
 
     //Handler
