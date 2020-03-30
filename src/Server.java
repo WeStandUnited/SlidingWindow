@@ -13,14 +13,14 @@ public class Server {
     DataOutputStream out = null;
     DataInputStream in = null;
     DatagramSocket serverSocket = null;
+    boolean V6;
 
-
+    InetAddress address;
     static int PORT;
     private int encrpytNum;
-    byte opcode;
 
 
-    public Server(int port) throws IOException {
+    public Server(int port,boolean V6) throws IOException {
 
         PORT = port;
         serverSocket = new DatagramSocket(port);
@@ -59,6 +59,7 @@ public class Server {
         Ack_Buff.flip();
         System.out.println("Sending:"+ B);
 
+        address = SYN.getAddress();
         DatagramPacket ACK = new DatagramPacket(Ack_Buff.array(),Ack_Buff.array().length,SYN.getAddress(),SYN.getPort());
         serverSocket.send(ACK);
 
@@ -71,9 +72,8 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException {
-        Server s =new Server(2770);
-
-            s.Auth();
+        Server s =new Server(2770,false);
+        PacketService ps = new PacketService(s.V6,false,s.address,PORT,s.Auth());
 
 
     }

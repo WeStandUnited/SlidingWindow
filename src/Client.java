@@ -15,7 +15,7 @@ public class Client {
 
     static int WINDOW_SIZE;
 
-
+    boolean V6;
     static int PORT;
     static Inet4Address HOSTv4 = null;
     static Inet6Address HOSTv6 = null;
@@ -23,6 +23,7 @@ public class Client {
     public Client(int port,String host,int size,boolean uploading,String file_name,boolean V6) throws IOException {
 
         PORT = port;
+        V6 = this.V6;
 
         if (V6){
             HOSTv6 = (Inet6Address) Inet6Address.getByName(host);
@@ -135,11 +136,12 @@ public class Client {
 
 
                      //Client(int port,String host,int size,boolean uploading,String file_name,boolean V6orV4)
-        Client c = new Client(Integer.parseInt(args[0]),args[1],Integer.parseInt(args[2]),Boolean.parseBoolean(args[3]),args[4],Boolean.parseBoolean(args[5]));
-
+        //Client c = new Client(Integer.parseInt(args[0]),args[1],Integer.parseInt(args[2]),Boolean.parseBoolean(args[3]),args[4],Boolean.parseBoolean(args[5]));
+        Client c = new Client(2770,"localhost",100,true,"file.txt",true);
         //eg command: java Client.class 2770 localhost 100 true me.txt true true
 
-        //c.xor_key = c.Auth();
+        PacketService ps = new PacketService(c.V6,false,HOSTv4,PORT,c.Auth());
+
 
 
     }
