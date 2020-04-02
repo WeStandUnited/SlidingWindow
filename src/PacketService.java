@@ -140,7 +140,24 @@ public class PacketService {
         }
     }
 
+    public short getBlockNumber(DatagramPacket p){
 
+        int data_size = p.getLength();
+
+        byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
+
+
+
+        //switch statement telling the bytes to
+
+        ByteBuffer buff = ByteBuffer.allocate(data_size);
+        buff.put(raw_packet);
+        buff.flip();
+
+        buff.getShort();
+
+        return buff.getShort();
+    }
 
 
 
@@ -150,7 +167,7 @@ public class PacketService {
 
 
     //Handler
-    public DatagramPacket Handler(DatagramPacket p) throws IOException {
+    public void Handler(DatagramPacket p) throws IOException {
         // Takes in DataGramPacket
 
         // Sends it to the appropriate unPack Function
@@ -180,6 +197,7 @@ public class PacketService {
 
             case 1://Read
                 MODE = Unpack_Request(raw_packet, 1);
+
                 break;
             case 2://Write
                 MODE = Unpack_Request(raw_packet, 2);
@@ -200,7 +218,6 @@ public class PacketService {
         }
 
 
-        return null;
     }
 
 

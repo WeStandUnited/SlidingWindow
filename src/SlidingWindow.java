@@ -3,51 +3,24 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 public class SlidingWindow {
-    /*
-        DOWNLOADING MODE
-
-        fill_Data_Buffer() //Used on the Downloading end.
-
-
-
-
-
-
-
-        UPLOADING MODE
-
-        fill_Data_window() //IF UPLOADING USE THIS METHOD
-
-
-
-
-
-
-     */
-
-
-    int window_counter = 0;
-    int mode;
+    int null_counter = 0;
     int size;
     ArrayList<DatagramPacket> Data_Buffer;
-    DatagramPacket [] send;
-
-    DatagramPacket [] recieve;
+    DatagramPacket [] Data_Window;
+    DatagramPacket [] Ack_Window;
     PacketService ps;
 
     public SlidingWindow (int size,int m,PacketService packetService) throws IOException {
         size = this.size;
 
-        send =  new DatagramPacket[size];
+        Data_Window =  new DatagramPacket[size];
 
-        recieve =   new DatagramPacket[size];
-
-        mode = m;
+        Ack_Window = new DatagramPacket[size];
 
         ps = packetService;
 
@@ -55,52 +28,76 @@ public class SlidingWindow {
 
         Data_Buffer = new ArrayList<DatagramPacket>(file_length);
 
-        if (mode == 2) {
+        if (ps.MODE == 2) {
             for (int i = 0; i < file_length; i++) {
 
                 ps.Fill_Data((short) i);
-                System.out.println("Block:"+i);
 
             }
         }
 
     }
 
-    public void clearWindow(){
-
-        for (int i=0;i<size;i++){
-
-            send[i] = null;
-            recieve[i] = null;
-
-      }
 
 
-    }
+    public void add_Data(DatagramPacket p){
 
-    public void fill_Data_window(){//IF UPLOADING USE THIS METHOD
+        for (int i = size-1; i>-1 ; i--) {
 
-        for (int i=0;i<size;i++){
+            if (Data_Window[i] == null){
 
-            send[i] = Data_Buffer.get(i+window_counter);
-
+                Data_Window[i] = p;
+            }
 
         }
-        window_counter += size;
+
+
     }
 
-
-    public void fill_Data_Buffer(){//Used on the Downloading end.
-
+    public boolean contains(short blocknum) throws IOException {
         for (int i=0;i<size;i++){
-
-            Data_Buffer.set(i+window_counter,send[i]);
-
+            DatagramPacket p = Data_Window[i];
+            if (blocknum == ps.getBlockNumber(p)){
+                return true;
+            }
 
         }
-        window_counter += size;
+        return false;
+    }
+
+    public int indexof(short blocknum){
+        for (int i=0;i<size;i++){
+            DatagramPacket p = Data_Window[i];
+            if (blocknum == ps.getBlockNumber(p)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+
+    public void remove(int index){
+        Data_Window[index] = null;
+        null_counter++;
+    }
+
+
+    public void shift(int offset){
+
+
+        DatagramPacket [] copy_array = new DatagramPacket[size];
+        DatagramPacket [] copy_array2 = new DatagramPacket[size];
+
+        System.arraycopy(Data_Window,offset,copy_array,0,size-offset);
+        System.arraycopy(Ack_Window,offset,copy_array2,0,size-offset);
+
+        Data_Window = copy_array;
+        Ack_Window = copy_array2;
 
     }
+
+
+
 
 
 }
