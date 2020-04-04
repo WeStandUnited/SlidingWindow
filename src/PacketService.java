@@ -40,6 +40,7 @@ public class PacketService {
 
 
     File file;
+    long file_length = 0;
     DatagramSocket datagramSocket;
     boolean V6_Mode;
     boolean PacketLossMode;
@@ -47,11 +48,11 @@ public class PacketService {
     Inet6Address Hostv6;
     int PORT;
     private int XOR;
-    int MODE;
+    short MODE;
     //Mode 1 : I AM READING FROM HOST
     //Mode 2 : I AM BEING READ FROM
 
-    int windowSize;
+    short windowSize;
 
     public PacketService(DatagramSocket sock,boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
         /*
@@ -91,7 +92,49 @@ public class PacketService {
         return b;
     }
 
-    public void PacketUtilSend(DatagramPacket p,DatagramSocket datagramSocket){
+    public void PacketUtilSendFileLength() throws IOException {
+        DatagramPacket packet = null;
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(file_length);
+
+        buffer.flip();
+
+
+
+        if (V6_Mode) {
+            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv6, PORT);
+
+        } else packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv4, PORT);
+
+
+        datagramSocket.send(packet);
+
+    }
+
+    public void PacketUtilRecieveFileLength() throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        byte b [] = new byte[8];
+        DatagramPacket packet = new DatagramPacket(b,b.length);
+        datagramSocket.receive(packet);
+        buffer.put(packet.getData());
+        buffer.flip();
+        file_length=buffer.getLong();
+
+
+        buffer.flip();
+
+
+
+        if (V6_Mode) {
+            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv6, PORT);
+
+        } else packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv4, PORT);
+
+
+        datagramSocket.send(packet);
+
+    }
+    public void PacketUtilSend(DatagramPacket p){
 
         try {
             datagramSocket.send(p);
@@ -124,7 +167,7 @@ public class PacketService {
 
     public void PacketUtil_W_Request(){
         try {
-            datagramSocket.send(Fill_Request(file.getName(),(short)1,windowSize));
+            datagramSocket.send(Fill_Request((short) 2,file.getName(),(short)2,windowSize));
         } catch (IOException e) {
             PacketUtilSendError();
             e.printStackTrace();
@@ -133,7 +176,7 @@ public class PacketService {
 
     public void PacketUtil_R_Request(){
         try {
-            datagramSocket.send(Fill_Request(file.getName(),(short)2,windowSize));
+            datagramSocket.send(Fill_Request((short) 1,file.getName(),(short)1,windowSize));
         } catch (IOException e) {
             PacketUtilSendError();
             e.printStackTrace();
@@ -166,73 +209,24 @@ public class PacketService {
 
 
 
-    //Handler
-    public void Handler(DatagramPacket p) throws IOException {
-        // Takes in DataGramPacket
-
-        // Sends it to the appropriate unPack Function
-
-        int data_size = p.getLength();
-        //Read first 2 bytes from packet
-
-        byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
-
-
-
-        //switch statement telling the bytes to
-
-        ByteBuffer buff = ByteBuffer.allocate(data_size);
-        buff.put(raw_packet);
-        buff.flip();
-
-        short code = buff.getShort();
-        /*  1     Read request (RRQ)
-            2     Write request (WRQ)
-            3     Data (DATA)
-            4     Acknowledgment (ACK)
-            5     Error (ERROR)
-        */
-
-        switch (code) {
-
-            case 1://Read
-                MODE = Unpack_Request(raw_packet, 1);
-
-                break;
-            case 2://Write
-                MODE = Unpack_Request(raw_packet, 2);
-
-                break;
-            case 3://Data
-                UnPack_Data(raw_packet);
-                break;
-            case 4:
-                UnPack_Ack(raw_packet);
-                break;
-            case 5:
-                UnPack_Error(raw_packet);
-                break;
-            default:
-                System.out.println("[Error] Packet Malformed!");
-
-        }
-
-
-    }
 
 
     // Fill RWRQ Packet
 
-    public DatagramPacket Fill_Request(String Filename, short mode,int size) {
+    public DatagramPacket Fill_Request(short opcode,String Filename, short mode,int size) {
         DatagramPacket packet = null;
 
-        ByteBuffer buff = ByteBuffer.allocate(2 + 2+ 255 );//Opcode + Window Length + Name
+        ByteBuffer buff = ByteBuffer.allocate(2+2+2+8+255);//Opcode + Window Length + Name
 
-        buff.putShort((short) mode);
+        buff.putShort((short) opcode);//2bytes
 
-        buff.putShort((short) size);
+        buff.putShort((short) mode);//2 bytes
 
-        buff.put(Filename.getBytes());
+        buff.putShort((short) size);//2 bytes
+
+        buff.putLong(file_length);//8 bytes
+
+        buff.put(Filename.getBytes());//255 max bytes
 
         buff.flip();
 
@@ -248,24 +242,24 @@ public class PacketService {
     // Fill RWRQ Packet
 
 
-    public int Unpack_Request(byte[] raw_packet, int opcode) throws IOException {
-
-        int mode = 0;
-        //Mode 1 : I AM READING FROM HOST
-        //Mode 2 : I AM BEING READ FROM
-
-        ByteBuffer buffer = ByteBuffer.allocate(2 +2 + 255);// 2 bytes is for the opcode|2 bytes for Window Size| 255 bytes is max length for name in Linux and Windows|
-
-        buffer.put(raw_packet);// need hash her to XOR it back
-
+    public void Unpack_Request(DatagramPacket p) throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(2+2+2+8+255);
+        buffer.put(p.getData());
         buffer.flip();
 
+        //System.out.println("Opcode:"+buffer.getShort());
+        short opcode = buffer.getShort();
+        //System.out.println("Mode:"+buffer.getShort());
+        MODE = buffer.getShort();
+        //System.out.println("size:"+buffer.getShort());
         windowSize = buffer.getShort();
-        byte[] b = new byte[255];
-
+        //System.out.println("Length:"+buffer.getInt());
+        file_length = buffer.getLong();
+        byte b [] = new byte[255];
         buffer.get(b);
+        //System.out.println("Filename"+new String(b).trim());
         String name = new String(b).trim();
-
+       //System.out.println(name);
         file = new File(name);
         if (opcode == 1) {
             //Mode 1 : I AM READING FROM HOST
@@ -274,17 +268,19 @@ public class PacketService {
             } else {
                 System.out.println("File already exists.");
             }
-            mode = 1;
         } else if (opcode == 2) {
             //Mode 2 : I AM BEING READ FROM
-            mode = 2;
+            file_length = file.length();
 
         }
 
 
 
-        return mode;
+
     }
+
+
+
 
 
     // Fill Data Packet
@@ -363,6 +359,19 @@ public class PacketService {
         ByteBuffer buffer = ByteBuffer.allocate(4);
 
         buffer.put(raw_packet);
+
+        buffer.flip();
+
+        buffer.getShort();
+
+        return buffer.getShort();
+
+    }
+    public short UnPack_Ack(DatagramPacket p) {
+
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+
+        buffer.put(hash(p.getData()));
 
         buffer.flip();
 

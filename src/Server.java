@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class Server {
 
@@ -72,29 +73,42 @@ public class Server {
         return s;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Server s =new Server(2770,false);
-        if (s.serverSocket.isConnected()) System.out.println("Client Connected!");
-        PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,s.Auth());
         System.out.println("Authing!");
-        ByteBuffer buffer = ByteBuffer.allocate(257);
+        PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,s.Auth());
+        System.out.println("Done!");
+        ByteBuffer buffer = ByteBuffer.allocate(269);
 
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
-
-        ps.Handler(ps.PacketUtilRecieve(p));
+        ps.Unpack_Request(ps.PacketUtilRecieve(p));
+        //ps.Handler(ps.PacketUtilRecieve(p));
         //ps.MODE =  1 // READ
         //ps.MODE = 2 // WRITE
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
         System.out.println("Mode:"+ps.MODE);
 
-        if (ps.MODE == 1){
+        if (ps.MODE == 2){
             System.out.println("[SET-MODE]: Downloading from Client");
-        }else if (ps.MODE == 2)System.out.println("[SET-MODE]: Downloading to Client");
+            ps.PacketUtilSendFileLength();
+        }else if (ps.MODE == 1){
+            System.out.println("[SET-MODE]: Downloading to Client");
+
+        }
 
 
-        SlidingWindow window = new SlidingWindow(10,ps.MODE,ps);//Size must be from Client
+        SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client
 
+
+        //while (window.null_counter != ps.file.length()){
+
+            // TODO send data and recieve here
+
+
+
+
+       //}
 
 
 

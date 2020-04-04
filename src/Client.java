@@ -10,7 +10,7 @@ public class Client {
 
     DatagramSocket sock =null;
     DataInputStream in = null;
-
+    long file_length;
     SlidingWindow window;
 
     static int WINDOW_SIZE;
@@ -89,7 +89,7 @@ public class Client {
 
 
 
-        Client c = new Client(2770,"localhost",100,true,true);
+        Client c = new Client(2770,"pi.cs.oswego.edu",100,true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
         System.out.println("Done!");
@@ -97,32 +97,42 @@ public class Client {
         System.out.println("Downloading from Server or Uploading to Server?:");
         String updown= scan.nextLine();
         String file_name = "file.txt";//NOTE THIS IS TEMP
-        //String file_name = scan.nextLine();
-        ps.file = new File(file_name);
+
+        ps.windowSize = (short)10;// we change this to input later
 
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
+        ps.file = new File(file_name);
         if (updown.equalsIgnoreCase("downloading")){
+            //String file_name = scan.nextLine();
+            ps.MODE = 2;
             ps.PacketUtil_R_Request();
+            ps.PacketUtilRecieveFileLength();
 
-            ps.MODE = 1;
+
+
 
         }else if(updown.equalsIgnoreCase("uploading")){
-
+            //String file_name = scan.nextLine();
+            ps.file = new File(file_name);
+            ps.file_length = ps.file.length();
             ps.PacketUtil_W_Request();
-
-            ps.MODE = 2;
+            ps.MODE = 1;
 
         }
         System.out.println("Mode:"+ps.MODE);
 
-
-        ps.windowSize = 10;// we change this to input later
-
-
-        SlidingWindow window = new SlidingWindow(10,ps.MODE,ps);//Size must be from Client
+        SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client
 
 
+       // while (window.null_counter != ps.file.length()){
+
+            // TODO send data and recieve here
+
+
+
+
+        //}
 
 
     }

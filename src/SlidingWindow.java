@@ -54,6 +54,20 @@ public class SlidingWindow {
 
     }
 
+    public void add_ACK(DatagramPacket p){
+
+        for (int i = size-1; i>-1 ; i--) {
+
+            if (Ack_Window[i] == null){
+
+                Ack_Window[i] = p;
+            }
+
+        }
+
+
+    }
+
     public boolean contains(short blocknum) throws IOException {
         for (int i=0;i<size;i++){
             DatagramPacket p = Data_Window[i];
@@ -78,7 +92,14 @@ public class SlidingWindow {
 
     public void remove(int index){
         Data_Window[index] = null;
+        Ack_Window[index] = null;
         null_counter++;
+    }
+
+
+    public boolean isFull(){
+
+        return Data_Window[size] != null;
     }
 
 
@@ -95,7 +116,6 @@ public class SlidingWindow {
         Ack_Window = copy_array2;
 
     }
-
 
 
 
