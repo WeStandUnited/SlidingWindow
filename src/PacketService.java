@@ -47,7 +47,7 @@ public class PacketService {
     Inet4Address Hostv4;
     Inet6Address Hostv6;
     int PORT;
-    private int XOR;
+    int XOR;
     short MODE;
     //Mode 1 : I AM READING FROM HOST
     //Mode 2 : I AM BEING READ FROM

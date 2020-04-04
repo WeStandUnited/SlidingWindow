@@ -19,7 +19,7 @@ public class Server {
 
     InetAddress address;
     static int PORT;
-    private int encrpytNum;
+    int encrpytNum;
 
 
     public Server(int port,boolean V6) throws IOException {
