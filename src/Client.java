@@ -20,7 +20,7 @@ public class Client {
     static Inet4Address HOSTv4 = null;
     static Inet6Address HOSTv6 = null;
 
-    public Client(int port,String host,int size,boolean uploading,boolean V6) throws IOException {
+    public Client(int port,String host,boolean uploading,boolean V6) throws IOException {
 
         PORT = port;
         V6 = this.V6;
@@ -86,10 +86,9 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-
-
-
-        Client c = new Client(2770,"pi.cs.oswego.edu",100,true,true);
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
+        Client c = new Client(2770,"localhost",true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
         System.out.println("Done!");
@@ -97,8 +96,8 @@ public class Client {
         System.out.println("Downloading from Server or Uploading to Server?:");
         String updown= scan.nextLine();
         String file_name = "file.txt";//NOTE THIS IS TEMP
-
-        ps.windowSize = (short)10;// we change this to input later
+        ps.setWindowSize((short)10);
+        //ps.windowSize = (short)10;// we change this to input later
 
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
@@ -107,7 +106,6 @@ public class Client {
             //String file_name = scan.nextLine();
             ps.MODE = 2;
             ps.PacketUtil_R_Request();
-            ps.PacketUtilRecieveFileLength();
 
 
 
@@ -120,6 +118,10 @@ public class Client {
             ps.MODE = 1;
 
         }
+
+        ps.PacketUtilRecieve(FileLength_ACK);
+
+
         System.out.println("Mode:"+ps.MODE);
 
         SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client

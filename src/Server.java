@@ -3,10 +3,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Random;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
+
 
 public class Server {
 
@@ -91,24 +89,31 @@ public class Server {
 
         if (ps.MODE == 2){
             System.out.println("[SET-MODE]: Downloading from Client");
-            ps.PacketUtilSendFileLength();
+            System.out.println(ps.file_length);
         }else if (ps.MODE == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
 
         }
-
+        ps.PacketUtilSendFileLength();
 
         SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client
 
 
-        //while (window.null_counter != ps.file.length()){
+       // while (window.null_counter != ps.file.length()){
 
             // TODO send data and recieve here
 
+            // fill my window from Fill_Buffer arraylist
+
+            // send my window
+
+            // set timers
+
+            //
 
 
 
-       //}
+      // }
 
 
 

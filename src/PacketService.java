@@ -52,7 +52,10 @@ public class PacketService {
     //Mode 1 : I AM READING FROM HOST
     //Mode 2 : I AM BEING READ FROM
 
-    short windowSize;
+    short windowSize = 0;
+
+
+
 
     public PacketService(DatagramSocket sock,boolean V6, boolean PacketLossMode, InetAddress Host, int port, int XOR) {
         /*
@@ -92,11 +95,14 @@ public class PacketService {
         return b;
     }
 
+    public void setWindowSize(short w){
+        w = windowSize;
+    }
+
     public void PacketUtilSendFileLength() throws IOException {
         DatagramPacket packet = null;
         ByteBuffer buffer = ByteBuffer.allocate(8);
         buffer.putLong(file_length);
-
         buffer.flip();
 
 
@@ -119,9 +125,6 @@ public class PacketService {
         buffer.put(packet.getData());
         buffer.flip();
         file_length=buffer.getLong();
-
-
-        buffer.flip();
 
 
 
