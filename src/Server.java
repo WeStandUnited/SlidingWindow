@@ -85,18 +85,18 @@ public class Server {
         //ps.MODE = 2 // WRITE
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
-        System.out.println("Mode:"+ps.MODE);
+        System.out.println("Mode:"+ps.getmode());
 
-        if (ps.MODE == 2){
+        if (ps.getmode() == 2){
             System.out.println("[SET-MODE]: Downloading from Client");
-            System.out.println(ps.file_length);
-        }else if (ps.MODE == 1){
+            System.out.println(ps.getFileLength());
+        }else if (ps.getmode() == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
 
         }
         ps.PacketUtilSendFileLength();
 
-        SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client
+        SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 
 
        // while (window.null_counter != ps.file.length()){

@@ -45,7 +45,6 @@ public class Client {
         int secret_num = r.nextInt(600);//Secret number
         int A = (int) Math.pow(base,secret_num) % mod_num;
 
-        ByteBuffer opcodeBuff = ByteBuffer.allocate(1);
         ByteBuffer buff = ByteBuffer.allocate(12);// Stuffing are byte buffer
 
         ByteBuffer ACK_Buff = ByteBuffer.allocate(4);
@@ -88,7 +87,7 @@ public class Client {
     public static void main(String[] args) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(8);
         DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
-        Client c = new Client(2770,"localhost",true,true);
+        Client c = new Client(2770,"pi.cs.oswego.edu",true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
         System.out.println("Done!");
@@ -101,10 +100,10 @@ public class Client {
 
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
-        ps.file = new File(file_name);
         if (updown.equalsIgnoreCase("downloading")){
             //String file_name = scan.nextLine();
-            ps.MODE = 2;
+            ps.setFile(new File(file_name));
+            ps.setmode((short) 2);
             ps.PacketUtil_R_Request();
 
 
@@ -112,19 +111,20 @@ public class Client {
 
         }else if(updown.equalsIgnoreCase("uploading")){
             //String file_name = scan.nextLine();
-            ps.file = new File(file_name);
-            ps.file_length = ps.file.length();
+            File f =new File(file_name);
+            ps.setFile(f);
+            ps.setFile_length(f.length());
             ps.PacketUtil_W_Request();
-            ps.MODE = 1;
+            ps.setmode((short) 1);
 
         }
 
         ps.PacketUtilRecieve(FileLength_ACK);
 
 
-        System.out.println("Mode:"+ps.MODE);
+        System.out.println("Mode:"+ps.getmode());
 
-        SlidingWindow window = new SlidingWindow(ps.windowSize,ps.MODE,ps);//Size must be from Client
+        SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 
 
        // while (window.null_counter != ps.file.length()){

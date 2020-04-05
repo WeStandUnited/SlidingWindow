@@ -24,7 +24,7 @@ public class SlidingWindow {
 
         ps = packetService;
 
-        int file_length = (int) ps.file.length() / 512;
+        int file_length = (int) ps.getFileLength() / 512;
 
         Data_Buffer = new ArrayList<DatagramPacket>(file_length);
 

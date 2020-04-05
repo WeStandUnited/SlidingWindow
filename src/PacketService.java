@@ -1,10 +1,7 @@
-import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.Random;
-import java.math.*;
-import java.util.Scanner;
+
 
 
 public class PacketService {
@@ -432,11 +429,28 @@ public class PacketService {
     }
 
 
-    //Testing Area
-    public static void main(String[] args) throws IOException {
-        //file = new File("file.txt");
-        //PacketService n = new PacketService(false, false, InetAddress.getByName("localhost"), 2770, 12);
+    //Getters Area
+    public short getmode(){
+        return MODE;
+    }
+    public void setmode(short mode){
+        MODE = mode;
+    }
+    public long getFileLength(){
+        return file_length;
     }
 
-
+    public short getWindowSize() {
+        return windowSize;
+    }
+    public void setFile_length(long l){
+        file_length=l;
+    }
+    public File getFile(){
+        return file;
+    }
+    public void setFile(File file) {
+        this.file = file;
+    }
 }
+
