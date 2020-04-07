@@ -103,8 +103,16 @@ public class Server {
         System.out.println("Authing!");
         int auth = s.Auth();
         PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,auth);
-        System.out.println("Host:"+ps.Hostv4.getHostAddress());
-        System.out.println("PORT:"+ps.PORT);
+        if (s.V6){
+            //print V6
+
+            System.out.println("Host:"+ps.getHostV6().getHostAddress());
+
+        }else {
+            System.out.println("Host:"+ps.getHostV4().getHostAddress());
+
+            //print V4
+        }
 
         System.out.println("Done!");
         ByteBuffer buffer = ByteBuffer.allocate(269);

@@ -90,8 +90,17 @@ public class Client {
         Client c = new Client(2770,"localhost",true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
-        System.out.println("Host:"+ps.Hostv4.getHostAddress());
-        System.out.println("PORT:"+ps.PORT);
+        if (c.V6){
+            //print V6
+
+            System.out.println("Host:"+ps.getHostV6().getHostAddress());
+
+        }else {
+            System.out.println("Host:"+ps.getHostV4().getHostAddress());
+
+            //print V4
+        }
+        System.out.println("PORT:"+ps.getPORT());
         System.out.println("Done!");
         Scanner scan = new Scanner(System.in);
         System.out.println("Downloading from Server or Uploading to Server?:");

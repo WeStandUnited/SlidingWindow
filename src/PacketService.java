@@ -453,5 +453,9 @@ public class PacketService {
     public void setFile(File file) {
         this.file = file;
     }
+    public Inet4Address getHostV4(){return Hostv4;}
+    public Inet6Address getHostV6(){return Hostv6;}
+
+    public int getPORT(){return PORT;}
 }
 
