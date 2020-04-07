@@ -29,14 +29,22 @@ public class Server {
 
 
     }
-    public byte[] hash(byte[] b) {
-        //we need int XOR
+    public byte [] hash(byte [] input){
+        // Define XOR key
+        // Any character value will work
 
+        // Define String to store encrypted/decrypted String
+        byte[] output = new byte[input.length];
 
-        //TODO Make hash funtion
+        // calculate length of input string
+        int len = input.length;
 
-
-        return b;
+        // perform XOR operation of key
+        // with every caracter in string
+        for (int i = 0; i < len; i++) {
+            output[i] = (byte)(input[i] ^ encrpytNum);
+        }
+        return output;
     }
     public void PacketUtilSendFileLength(File file) throws IOException {
         DatagramPacket packet = null;
@@ -119,6 +127,8 @@ public class Server {
 
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
         ps.Unpack_Request(ps.PacketUtilRecieve(p));
+        ps.PacketUtilSendFileLength();
+
         //ps.Handler(ps.PacketUtilRecieve(p));
         //ps.MODE =  1 // READ
         //ps.MODE = 2 // WRITE
@@ -128,12 +138,12 @@ public class Server {
 
         if (ps.getmode() == 2){
             System.out.println("[SET-MODE]: Downloading from Client");
-            System.out.println(ps.getFileLength());
+            System.out.println("[File Length]"+ps.getFileLength());
         }else if (ps.getmode() == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
 
         }
-        ps.PacketUtilSendFileLength();
+
 
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 

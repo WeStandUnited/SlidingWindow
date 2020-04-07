@@ -82,14 +82,22 @@ public class PacketService {
     }
 
     //Hash Fn
-    public byte[] hash(byte[] b) {
-        //we need int XOR
+    public byte [] hash(byte [] input){
+        // Define XOR key
+        // Any character value will work
 
+        // Define String to store encrypted/decrypted String
+        byte[] output = new byte[input.length];
 
-        //TODO Make hash funtion
+        // calculate length of input string
+        int len = input.length;
 
-
-        return b;
+        // perform XOR operation of key
+        // with every caracter in string
+        for (int i = 0; i < len; i++) {
+            output[i] = (byte)(input[i] ^ XOR);
+        }
+        return output;
     }
 
     public void setWindowSize(short w){
@@ -111,6 +119,7 @@ public class PacketService {
 
 
         datagramSocket.send(packet);
+        System.out.println("[File Length Status]:Sent!");
 
     }
 
@@ -440,7 +449,6 @@ public class PacketService {
     public long getFileLength(){
         return file_length;
     }
-
     public short getWindowSize() {
         return windowSize;
     }
@@ -455,7 +463,6 @@ public class PacketService {
     }
     public Inet4Address getHostV4(){return Hostv4;}
     public Inet6Address getHostV6(){return Hostv6;}
-
     public int getPORT(){return PORT;}
 }
 

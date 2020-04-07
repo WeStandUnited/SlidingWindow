@@ -8,19 +8,35 @@ import java.util.Random;
 import java.util.RandomAccess;
 
 public class Test {
+    static byte [] encryptDecrpyt(byte [] input){
+        // Define XOR key
+        // Any character value will work
+        int xorKey = 7;
+
+        // Define String to store encrypted/decrypted String
+        byte[] output = new byte[input.length];
+
+        // calculate length of input string
+        int len = input.length;
+
+        // perform XOR operation of key
+        // with every caracter in string
+        for (int i = 0; i < len; i++) {
+            output[i] = (byte)(input[i] ^ xorKey);
+        }
+        return output;
+    }
 
     public static void main(String[] args) {
-        int size = 10;
-        int p = 111;
-        int [] Data_Window = new int[size];
-        for (int i = 0; i < size ; i++) {
-            Data_Window[i]=i;
-            System.out.println(Data_Window[i]);
-        }
+        String l = "hello";
 
-        for (int i = size-1; i>-1 ; i--) {
-            System.out.println(Data_Window[i]);
-        }
+        String s = new String(encryptDecrpyt(l.getBytes()));
+
+        System.out.println(s);
+
+        String s2 = new String(encryptDecrpyt(s.getBytes()));
+
+        System.out.println(s2);
 
 
     }

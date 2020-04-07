@@ -20,15 +20,20 @@ public class Client {
     static Inet4Address HOSTv4 = null;
     static Inet6Address HOSTv6 = null;
 
+
+
+
+
+
     public Client(int port,String host,boolean uploading,boolean V6) throws IOException {
 
         PORT = port;
         V6 = this.V6;
 
         if (V6){
-            HOSTv6 = (Inet6Address) Inet6Address.getByName(host);
+            HOSTv6 = (Inet6Address) InetAddress.getByName(host);
         }else {
-            HOSTv4 = (Inet4Address) Inet6Address.getByName(host);
+            HOSTv4 = (Inet4Address) InetAddress.getByName(host);
 
         }
         sock = new DatagramSocket();
@@ -87,7 +92,7 @@ public class Client {
     public static void main(String[] args) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(8);
         DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
-        Client c = new Client(2770,"localhost",true,true);
+        Client c = new Client(2770,"localhost",true,false);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
         if (c.V6){
@@ -116,7 +121,7 @@ public class Client {
             ps.setFile(new File(file_name));
             ps.setmode((short) 2);
             ps.PacketUtil_R_Request();
-
+            c.sock.receive(FileLength_ACK);
 
 
 
@@ -130,7 +135,6 @@ public class Client {
 
         }
 
-        ps.PacketUtilRecieve(FileLength_ACK);
 
 
         System.out.println("Mode:"+ps.getmode());
