@@ -263,15 +263,16 @@ public class PacketService {
         file = new File(name);
         if (opcode == 1) {
             //Mode 1 : I AM READING FROM HOST
+
+            file_length = file.length();
+
+        } else if (opcode == 2) {
+            //Mode 2 : I AM BEING READ FROM
             if (file.createNewFile()) {
                 System.out.println("File created: " + file.getName());
             } else {
                 System.out.println("File already exists.");
             }
-        } else if (opcode == 2) {
-            //Mode 2 : I AM BEING READ FROM
-            file_length = file.length();
-
         }
 
 

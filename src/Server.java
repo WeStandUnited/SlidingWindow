@@ -1,5 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -26,6 +27,32 @@ public class Server {
         serverSocket = new DatagramSocket(port);
 
 
+
+    }
+    public byte[] hash(byte[] b) {
+        //we need int XOR
+
+
+        //TODO Make hash funtion
+
+
+        return b;
+    }
+    public void PacketUtilSendFileLength(File file) throws IOException {
+        DatagramPacket packet = null;
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(file.length());
+        buffer.flip();
+
+
+
+
+            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, address, PORT);
+
+
+
+
+        serverSocket.send(packet);
 
     }
 
@@ -74,7 +101,11 @@ public class Server {
     public static void main(String[] args) throws IOException, InterruptedException {
         Server s =new Server(2770,false);
         System.out.println("Authing!");
-        PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,s.Auth());
+        int auth = s.Auth();
+        PacketService ps = new PacketService(s.serverSocket,s.V6,false,s.address,PORT,auth);
+        System.out.println("Host:"+ps.Hostv4.getHostAddress());
+        System.out.println("PORT:"+ps.PORT);
+
         System.out.println("Done!");
         ByteBuffer buffer = ByteBuffer.allocate(269);
 

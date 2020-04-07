@@ -54,18 +54,22 @@ public class SlidingWindow {
 
     }
 
-    public void add_ACK(DatagramPacket p){
+    public boolean add_ACK(DatagramPacket p){
+        //True in meaning successful
+
+
 
         for (int i = size-1; i>-1 ; i--) {
 
             if (Ack_Window[i] == null){
 
                 Ack_Window[i] = p;
+                return true;
             }
 
         }
 
-
+        return false;
     }
 
     public boolean contains(short blocknum) throws IOException {

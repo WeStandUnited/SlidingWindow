@@ -87,9 +87,11 @@ public class Client {
     public static void main(String[] args) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(8);
         DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
-        Client c = new Client(2770,"pi.cs.oswego.edu",true,true);
+        Client c = new Client(2770,"localhost",true,true);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
+        System.out.println("Host:"+ps.Hostv4.getHostAddress());
+        System.out.println("PORT:"+ps.PORT);
         System.out.println("Done!");
         Scanner scan = new Scanner(System.in);
         System.out.println("Downloading from Server or Uploading to Server?:");
