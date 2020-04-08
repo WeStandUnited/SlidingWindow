@@ -10,13 +10,13 @@ public class Client {
 
     DatagramSocket sock =null;
     DataInputStream in = null;
-    long file_length;
-    SlidingWindow window;
+    long file_length = 0;
+    SlidingWindow window = null;
 
-    static int WINDOW_SIZE;
+    static int WINDOW_SIZE = 0;
 
-    boolean V6;
-    static int PORT;
+    boolean V6 = false;
+    static int PORT = 0;
     static Inet4Address HOSTv4 = null;
     static Inet6Address HOSTv6 = null;
 
@@ -90,9 +90,9 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(8);
+        ByteBuffer buffer = ByteBuffer.allocate(269);
         DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
-        Client c = new Client(2770,"localhost",true,false);
+        Client c = new Client(2770,"192.168.1.6",true,false);
         System.out.println("[Authing]");
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
         if (c.V6){
@@ -121,7 +121,7 @@ public class Client {
             ps.setFile(new File(file_name));
             ps.setmode((short) 2);
             ps.PacketUtil_R_Request();
-            c.sock.receive(FileLength_ACK);
+            ps.PacketUtilRecieveFileLength();
 
 
 
@@ -134,10 +134,8 @@ public class Client {
             ps.setmode((short) 1);
 
         }
-
-
-
         System.out.println("Mode:"+ps.getmode());
+
 
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 

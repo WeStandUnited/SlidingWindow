@@ -36,16 +36,16 @@ public class PacketService {
         */
 
 
-    File file;
+    File file = null;
     long file_length = 0;
-    DatagramSocket datagramSocket;
+    DatagramSocket datagramSocket = null;
     boolean V6_Mode;
     boolean PacketLossMode;
-    Inet4Address Hostv4;
-    Inet6Address Hostv6;
-    int PORT;
-    int XOR;
-    short MODE;
+    Inet4Address Hostv4 =null;
+    Inet6Address Hostv6 = null;
+    int PORT =0;
+    int XOR = 0;
+    short MODE = 0;
     //Mode 1 : I AM READING FROM HOST
     //Mode 2 : I AM BEING READ FROM
 
@@ -104,7 +104,7 @@ public class PacketService {
         w = windowSize;
     }
 
-    public void PacketUtilSendFileLength() throws IOException {
+    public DatagramPacket PacketUtilSendFileLength() throws IOException {
         DatagramPacket packet = null;
         ByteBuffer buffer = ByteBuffer.allocate(8);
         buffer.putLong(file_length);
@@ -118,31 +118,21 @@ public class PacketService {
         } else packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv4, PORT);
 
 
-        datagramSocket.send(packet);
-        System.out.println("[File Length Status]:Sent!");
-
+        return packet;
     }
-
     public void PacketUtilRecieveFileLength() throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(8);
-        byte b [] = new byte[8];
-        DatagramPacket packet = new DatagramPacket(b,b.length);
+        DatagramPacket packet = new DatagramPacket(buffer.array(),buffer.array().length);
         datagramSocket.receive(packet);
         buffer.put(packet.getData());
         buffer.flip();
-        file_length=buffer.getLong();
+        file_length = buffer.getLong();
 
 
-
-        if (V6_Mode) {
-            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv6, PORT);
-
-        } else packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, Hostv4, PORT);
-
-
-        datagramSocket.send(packet);
 
     }
+
+
     public void PacketUtilSend(DatagramPacket p){
 
         try {

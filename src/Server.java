@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.sql.Time;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 
 public class Server {
@@ -14,11 +16,11 @@ public class Server {
     DataOutputStream out = null;
     DataInputStream in = null;
     DatagramSocket serverSocket = null;
-    boolean V6;
+    boolean V6 = false;
 
-    InetAddress address;
-    static int PORT;
-    int encrpytNum;
+    InetAddress address = null;
+    static int PORT = 0;
+    int encrpytNum = 0;
 
 
     public Server(int port,boolean V6) throws IOException {
@@ -127,7 +129,12 @@ public class Server {
 
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
         ps.Unpack_Request(ps.PacketUtilRecieve(p));
-        ps.PacketUtilSendFileLength();
+        TimeUnit.SECONDS.sleep(1);
+        ByteBuffer buffer1 = ByteBuffer.allocate(8);
+        buffer1.putLong(ps.getFile().length());
+        buffer1.flip();
+
+
 
         //ps.Handler(ps.PacketUtilRecieve(p));
         //ps.MODE =  1 // READ
@@ -141,8 +148,9 @@ public class Server {
             System.out.println("[File Length]"+ps.getFileLength());
         }else if (ps.getmode() == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
-
+            ps.PacketUtilSendFileLength();
         }
+
 
 
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
