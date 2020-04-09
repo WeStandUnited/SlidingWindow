@@ -149,10 +149,18 @@ public class Server {
         }else if (ps.getmode() == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
             DatagramSocket ssock = new DatagramSocket(PORT+1);
-            PacketService pp = new PacketService(ssock,false,false, InetAddress.getByName("localhost"),2770,0);
-            pp.setFile(ps.getFile());
-            pp.setFile_length(ps.getFileLength());
-            pp.PacketUtilSendFileLength();
+            if (s.V6){
+                PacketService pp = new PacketService(ssock,false,false, ps.getHostV6(),PORT+1,auth);
+                pp.setFile(ps.getFile());
+                pp.setFile_length(ps.getFileLength());
+                s.serverSocket.send(pp.PacketUtilSendFileLength());
+            }else {
+                PacketService pp = new PacketService(ssock,false,false, ps.getHostV4(),PORT+1,auth);
+                pp.setFile(ps.getFile());
+                pp.setFile_length(ps.getFileLength());
+                s.serverSocket.send(pp.PacketUtilSendFileLength());
+            }
+
             ssock.close();
         }
 

@@ -90,8 +90,6 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(269);
-        DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
         Client c = new Client(2770,"192.168.1.6",true,false);
         System.out.println("[Authing]");
         int auth = c.Auth();
@@ -118,17 +116,28 @@ public class Client {
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
 
-        if (updown.equalsIgnoreCase("downloading")){
+        if (updown.equalsIgnoreCase("d")){
             //String file_name = scan.nextLine();
             ps.setFile(new File(file_name));
             ps.setmode((short) 2);
             ps.PacketUtil_R_Request();
+
             DatagramSocket ssock = new DatagramSocket(PORT+1);
-            PacketService pp = new PacketService(ssock,false,false, InetAddress.getByName("localhost"),2770,0);
-            pp.PacketUtilRecieveFileLength();
+
+            if (c.V6){
+                PacketService pp = new PacketService(ssock,c.V6,false, ps.getHostV6(),PORT+1,auth);
+                pp.PacketUtilRecieveFileLength();
+                ps.setFile_length(pp.getFileLength());
+            }else {
+               PacketService  pp = new PacketService(ssock,c.V6,false, ps.Hostv4,PORT+1,auth);
+                pp.PacketUtilRecieveFileLength();
+                ps.setFile_length(pp.getFileLength());
+
+            }
+
             // ps.PacketUtilRecieveFileLength();//Receive File length
 
-        }else if(updown.equalsIgnoreCase("uploading")){
+        }else if(updown.equalsIgnoreCase("u")){
             //String file_name = scan.nextLine();
             File f =new File(file_name);
             ps.setFile(f);
