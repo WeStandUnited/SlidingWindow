@@ -148,7 +148,12 @@ public class Server {
             System.out.println("[File Length]"+ps.getFileLength());
         }else if (ps.getmode() == 1){
             System.out.println("[SET-MODE]: Downloading to Client");
-            ps.PacketUtilSendFileLength();
+            DatagramSocket ssock = new DatagramSocket(PORT+1);
+            PacketService pp = new PacketService(ssock,false,false, InetAddress.getByName("localhost"),2770,0);
+            pp.setFile(ps.getFile());
+            pp.setFile_length(ps.getFileLength());
+            pp.PacketUtilSendFileLength();
+            ssock.close();
         }
 
 

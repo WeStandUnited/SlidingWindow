@@ -94,7 +94,8 @@ public class Client {
         DatagramPacket FileLength_ACK = new DatagramPacket(buffer.array(),buffer.array().length);
         Client c = new Client(2770,"192.168.1.6",true,false);
         System.out.println("[Authing]");
-        PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,c.Auth());
+        int auth = c.Auth();
+        PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,auth);
         if (c.V6){
             //print V6
 
@@ -116,14 +117,16 @@ public class Client {
 
         //Mode 1 : I AM READING FROM HOST
         //Mode 2 : I AM BEING READ FROM
+
         if (updown.equalsIgnoreCase("downloading")){
             //String file_name = scan.nextLine();
             ps.setFile(new File(file_name));
             ps.setmode((short) 2);
             ps.PacketUtil_R_Request();
-            ps.PacketUtilRecieveFileLength();
-
-
+            DatagramSocket ssock = new DatagramSocket(PORT+1);
+            PacketService pp = new PacketService(ssock,false,false, InetAddress.getByName("localhost"),2770,0);
+            pp.PacketUtilRecieveFileLength();
+            // ps.PacketUtilRecieveFileLength();//Receive File length
 
         }else if(updown.equalsIgnoreCase("uploading")){
             //String file_name = scan.nextLine();
