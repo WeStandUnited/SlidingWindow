@@ -90,7 +90,7 @@ public class Client {
 
 
     public static void main(String[] args) throws IOException {
-        Client c = new Client(2770,"192.168.1.6",true,false);
+        Client c = new Client(2770,"192.168.1.12",true,false);
         System.out.println("[Authing]");
         int auth = c.Auth();
         PacketService ps = new PacketService(c.sock,c.V6,false,HOSTv4,PORT,auth);
@@ -126,12 +126,10 @@ public class Client {
 
             if (c.V6){
                 PacketService pp = new PacketService(ssock,c.V6,false, ps.getHostV6(),PORT+1,auth);
-                pp.PacketUtilRecieveFileLength();
-                ps.setFile_length(pp.getFileLength());
+                ps.setFile_length(pp.PacketUtilRecieveFileLength());
             }else {
                PacketService  pp = new PacketService(ssock,c.V6,false, ps.Hostv4,PORT+1,auth);
-                pp.PacketUtilRecieveFileLength();
-                ps.setFile_length(pp.getFileLength());
+                ps.setFile_length(pp.PacketUtilRecieveFileLength());
 
             }
             ssock.close();

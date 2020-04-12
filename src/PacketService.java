@@ -120,7 +120,7 @@ public class PacketService {
 
         return packet;
     }
-    public void PacketUtilRecieveFileLength() throws IOException {
+    public long PacketUtilRecieveFileLength() throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(8);
         DatagramPacket packet = new DatagramPacket(buffer.array(),buffer.array().length);
         datagramSocket.receive(packet);
@@ -129,7 +129,7 @@ public class PacketService {
         file_length = buffer.getLong();
 
 
-
+        return file_length;
     }
 
 

@@ -153,11 +153,13 @@ public class Server {
                 PacketService pp = new PacketService(ssock,false,false, ps.getHostV6(),PORT+1,auth);
                 pp.setFile(ps.getFile());
                 pp.setFile_length(ps.getFileLength());
+                System.out.println("[File Length]"+pp.file_length);
                 s.serverSocket.send(pp.PacketUtilSendFileLength());
             }else {
                 PacketService pp = new PacketService(ssock,false,false, ps.getHostV4(),PORT+1,auth);
                 pp.setFile(ps.getFile());
                 pp.setFile_length(ps.getFileLength());
+                System.out.println("[File Length]"+pp.file_length);
                 s.serverSocket.send(pp.PacketUtilSendFileLength());
             }
 
