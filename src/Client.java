@@ -134,7 +134,8 @@ public class Client {
                 ps.setFile_length(pp.getFileLength());
 
             }
-
+            ssock.close();
+            System.out.println("[File Length]"+ps.getFileLength());
             // ps.PacketUtilRecieveFileLength();//Receive File length
 
         }else if(updown.equalsIgnoreCase("u")){
@@ -152,14 +153,30 @@ public class Client {
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 
 
-       // while (window.null_counter != ps.file.length()){
+       while (window.null_counter != window.Data_Buffer.size()){
 
             // TODO send data and recieve here
 
+           if (ps.getmode()==1){
+               //sending data
+                for (int i=0;i<ps.getWindowSize();i++){
+                    c.sock.send(window.Data_Window[i]);
+                    window.add_Timer(i);
+                }
+
+
+           }else if (ps.getmode()==2){
+               //recieving data
 
 
 
-        //}
+
+           }
+
+
+
+
+        }
 
 
     }

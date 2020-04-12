@@ -3,9 +3,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.RandomAccess;
+import java.util.concurrent.TimeUnit;
 
 public class Test {
     static byte [] encryptDecrpyt(byte [] input){
@@ -27,16 +29,14 @@ public class Test {
         return output;
     }
 
-    public static void main(String[] args) {
-        String l = "hello";
+    public static void main(String[] args) throws InterruptedException {
 
-        String s = new String(encryptDecrpyt(l.getBytes()));
+        long startTime = System.nanoTime();
+        System.out.println(startTime);
+        TimeUnit.SECONDS.sleep(3);
 
-        System.out.println(s);
-
-        String s2 = new String(encryptDecrpyt(s.getBytes()));
-
-        System.out.println(s2);
+        long estimatedTime = System.nanoTime() - startTime;
+        System.out.println(estimatedTime);
 
 
     }

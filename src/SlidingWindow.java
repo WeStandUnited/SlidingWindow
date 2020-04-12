@@ -1,10 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 
 public class SlidingWindow {
@@ -12,15 +9,19 @@ public class SlidingWindow {
     int size;
     ArrayList<DatagramPacket> Data_Buffer;
     DatagramPacket [] Data_Window;
+    long [] Data_Timer;
     DatagramPacket [] Ack_Window;
+    long [] ACK_Timer;
+
     PacketService ps;
 
     public SlidingWindow (int size,int m,PacketService packetService) throws IOException {
         size = this.size;
 
         Data_Window =  new DatagramPacket[size];
-
+        Data_Timer = new long[size];
         Ack_Window = new DatagramPacket[size];
+        ACK_Timer = new long[size];
 
         ps = packetService;
 
@@ -28,13 +29,17 @@ public class SlidingWindow {
 
         Data_Buffer = new ArrayList<DatagramPacket>(file_length);
 
-        if (ps.MODE == 2) {
+        if (ps.MODE == 1) {
             for (int i = 0; i < file_length; i++) {
 
-                ps.Fill_Data((short) i);
+                Data_Buffer.add(ps.Fill_Data((short) i));
 
             }
+            for (int j = 0; j < this.size; j++){
+                add_Data(Data_Buffer.get(j));
+            }
         }
+
 
     }
 
@@ -53,12 +58,15 @@ public class SlidingWindow {
 
 
     }
+    public void add_Timer(int index){
+
+        Data_Timer[index] = System.nanoTime();
+
+
+    }
 
     public boolean add_ACK(DatagramPacket p){
         //True in meaning successful
-
-
-
         for (int i = size-1; i>-1 ; i--) {
 
             if (Ack_Window[i] == null){
