@@ -1,7 +1,5 @@
-import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.util.*;
 
 
@@ -131,7 +129,13 @@ public class SlidingWindow {
 
     public boolean isFull(DatagramPacket [] p){
 
-        return p[size] != null;
+        for (int x=0; x < p.length; x++)
+            if (x == p.length - 1){
+                return true;
+            }
+
+
+        return false;
     }
 
 

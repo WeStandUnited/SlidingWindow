@@ -198,6 +198,20 @@ public class Client {
            }else if (ps.getmode()==2){
 
                //recieving data
+               //recieving data
+               while(window.isFull(window.Data_Window)) {
+                   ByteBuffer byteBuffer = ByteBuffer.allocate(512);
+                   DatagramPacket data = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
+                   c.sock.receive(data);
+                   window.add_Data(data);
+               }
+               // after our data window is full we send out acks
+               for (int i=0;i<window.Data_Window.length;i++){
+
+                   c.sock.send(ps.Fill_Ack((short)ps.UnPack_Data(window.Data_Window[i])));// unpacks data writes to file returns what block number it wrote and sends ack back with block number
+                   window.remove(i);
+
+               }
 
 
 

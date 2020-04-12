@@ -163,7 +163,7 @@ public class Server {
 
             ssock.close();
         }
-
+        ps.setWindowSize((short)10);
 
 
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
