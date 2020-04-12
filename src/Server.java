@@ -178,7 +178,7 @@ public class Server {
                    s.serverSocket.send(window.Data_Window[i]);
                    window.add_Timer(i);
                }
-               while(window.isFull(window.Ack_Window)){
+               while(!(window.isFull(window.Ack_Window))){
                    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
                    DatagramPacket ack = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
                    ps.PacketUtilRecieve(ack);
@@ -213,7 +213,7 @@ public class Server {
            }else if (ps.getmode()==2){
 
                //recieving data
-               while(window.isFull(window.Data_Window)) {
+               while(!(window.isFull(window.Data_Window))) {
                    ByteBuffer byteBuffer = ByteBuffer.allocate(512);
                    DatagramPacket data = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
                    s.serverSocket.receive(data);
