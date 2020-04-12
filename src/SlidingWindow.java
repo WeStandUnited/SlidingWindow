@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.*;
 
 
@@ -12,7 +13,7 @@ public class SlidingWindow {
     long [] Data_Timer;
     DatagramPacket [] Ack_Window;
     long [] ACK_Timer;
-
+    int file_length;
     PacketService ps;
 
     public SlidingWindow (int size,int m,PacketService packetService) throws IOException {
@@ -25,7 +26,7 @@ public class SlidingWindow {
 
         ps = packetService;
 
-        int file_length = (int) ps.getFileLength() / 512;
+         file_length = (int) ps.getFileLength() / 512;
 
         Data_Buffer = new ArrayList<DatagramPacket>(file_length);
 
@@ -58,6 +59,14 @@ public class SlidingWindow {
 
 
     }
+    public void Fill_Data_Array() throws IOException {
+
+        for (int j = 0; j < this.size; j++){
+            add_Data(Data_Buffer.get(j+null_counter));
+        }
+    }
+
+
     public void add_Timer(int index){
 
         Data_Timer[index] = System.nanoTime();
@@ -90,6 +99,16 @@ public class SlidingWindow {
         }
         return false;
     }
+    public short getData(short blocknum) throws IOException {
+        for (int i=0;i<size;i++){
+            DatagramPacket p = Data_Window[i];
+            if (blocknum == ps.getBlockNumber(p)){
+                return blocknum;
+            }
+
+        }
+        return -1;
+    }
 
     public int indexof(short blocknum){
         for (int i=0;i<size;i++){
@@ -105,13 +124,14 @@ public class SlidingWindow {
     public void remove(int index){
         Data_Window[index] = null;
         Ack_Window[index] = null;
+        Data_Timer[index] = 0;
         null_counter++;
     }
 
 
-    public boolean isFull(){
+    public boolean isFull(DatagramPacket [] p){
 
-        return Data_Window[size] != null;
+        return p[size] != null;
     }
 
 

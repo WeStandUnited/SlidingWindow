@@ -285,7 +285,7 @@ public class PacketService {
 
     // Fill Data Packet
 
-    public DatagramPacket Fill_Data(short BlockNum) throws IOException {
+    public DatagramPacket Fill_Data(int BlockNum) throws IOException {
 
         RandomAccessFile ra = new RandomAccessFile(file, "r");
         byte[] data = new byte[512];
@@ -293,7 +293,7 @@ public class PacketService {
         ra.read(data);
         ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + 512);
 
-        buffer.putShort(BlockNum);
+        buffer.putShort((short)BlockNum);
         buffer.put(data);
         buffer.flip();
         DatagramPacket packet;
@@ -331,6 +331,28 @@ public class PacketService {
         // Write to file
 
 
+    }
+    public int UnPack_Data(DatagramPacket p) throws IOException {// Returns Void due to it just taking care of writing to the File
+        RandomAccessFile ra = new RandomAccessFile(file, "w");
+        ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + 512);
+        buffer.put(p.getData());
+        buffer.flip();
+
+        buffer.getShort();
+
+        short BlockNum = buffer.getShort();
+
+        byte[] data = new byte[512];
+
+        ra.seek((long) BlockNum);
+
+        ra.write(data);
+
+        ra.close();
+
+        // Write to file
+
+        return BlockNum;
     }
 
 

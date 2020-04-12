@@ -169,21 +169,71 @@ public class Server {
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
 
 
-       // while (window.null_counter != ps.file.length()){
-
-            // TODO send data and recieve here
-
-            // fill my window from Fill_Buffer arraylist
-
-            // send my window
-
-            // set timers
-
-            //
+       while (window.null_counter != ps.file.length()){
 
 
+           if (ps.getmode()==1){
+               //INTIAL SEND OF DATA
+               for (int i=0;i<ps.getWindowSize();i++){
+                   s.serverSocket.send(window.Data_Window[i]);
+                   window.add_Timer(i);
+               }
+               while(window.isFull(window.Ack_Window)){
+                   ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+                   DatagramPacket ack = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
+                   ps.PacketUtilRecieve(ack);
+                   window.add_ACK(ack);
+                   //iterate through timer's if any of them equall some number eg 3 seconds RESEND
+                   for (int i =0;i<window.Data_Timer.length;i++){
+                       // if window.Data_Timer[i] >= 3 seconds resend
+                       if (System.nanoTime() - window.Data_Timer[i]>= 3000561965L) {
+                           s.serverSocket.send(window.Data_Window[i]);
+                       }
 
-      // }
+
+                   }
+
+
+               }
+               // Unpack Ack's
+
+               for (DatagramPacket packet :window.Ack_Window){
+
+                   window.remove((int)window.getData(ps.UnPack_Ack(packet)));
+                   // remove DataArray's By block number
+
+               }
+               window.Fill_Data_Array();
+
+
+
+
+
+
+           }else if (ps.getmode()==2){
+
+               //recieving data
+               while(window.isFull(window.Data_Window)) {
+                   ByteBuffer byteBuffer = ByteBuffer.allocate(512);
+                   DatagramPacket data = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
+                   s.serverSocket.receive(data);
+                   window.add_Data(data);
+               }
+               // after our data window is full we send out acks
+               for (int i=0;i<window.Data_Window.length;i++){
+
+                   s.serverSocket.send(ps.Fill_Ack((short)ps.UnPack_Data(window.Data_Window[i])));// unpacks data writes to file returns what block number it wrote and sends ack back with block number
+                    window.remove(i);
+
+               }
+
+
+
+           }
+
+
+
+       }
 
 
 

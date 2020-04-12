@@ -158,14 +158,45 @@ public class Client {
             // TODO send data and recieve here
 
            if (ps.getmode()==1){
-               //sending data
-                for (int i=0;i<ps.getWindowSize();i++){
-                    c.sock.send(window.Data_Window[i]);
-                    window.add_Timer(i);
-                }
+               //INTIAL SEND OF DATA
+               for (int i=0;i<ps.getWindowSize();i++){
+                   c.sock.send(window.Data_Window[i]);
+                   window.add_Timer(i);
+               }
+                while(window.isFull(window.Ack_Window)){
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+                    DatagramPacket ack = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
+                    ps.PacketUtilRecieve(ack);
+                    window.add_ACK(ack);
+                   //iterate through timer's if any of them equall some number eg 3 seconds RESEND
+                    for (int i =0;i<window.Data_Timer.length;i++){
+                        // if window.Data_Timer[i] >= 3 seconds resend
+                        if (System.nanoTime() - window.Data_Timer[i]>= 3000561965L) {
+                            c.sock.send(window.Data_Window[i]);
+                        }
+
+
+                    }
+
+
+               }
+                // Unpack Ack's
+
+               for (DatagramPacket p :window.Ack_Window){
+
+                   window.remove((int)window.getData(ps.UnPack_Ack(p)));
+                   // remove DataArray's By block number
+
+               }
+               window.Fill_Data_Array();
+
+
+
+
 
 
            }else if (ps.getmode()==2){
+
                //recieving data
 
 
