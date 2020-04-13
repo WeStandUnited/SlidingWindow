@@ -12,7 +12,7 @@ public class FTPClient {
     static boolean V6_Mode;
     static int XOR;
     File file;
-    int file_length = 0;
+    long file_length = 0;
     int windowSize;
     static int MODE;
 
@@ -118,11 +118,18 @@ public class FTPClient {
 
         buff.putShort((short) opcode);//2bytes
 
+        System.out.println("opcode:"+opcode);
+
         buff.putShort((short) mode);//2 bytes
+
+        System.out.println("mode :"+mode);
 
         buff.putShort((short) size);//2 bytes
 
+        System.out.println("window size :"+size);
+
         buff.putLong(file_length);//8 bytes
+        System.out.println("file_length:"+file_length);
 
         buff.put(Filename.getBytes());//255 max bytes
 
@@ -136,7 +143,7 @@ public class FTPClient {
     }
     public void PacketUtil_W_Request(){
         try {
-            sock.send(Fill_Request((short) 2,file.getName(),(short)2,file_length));
+            sock.send(Fill_Request((short) 2,file.getName(),(short)2,windowSize));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -144,7 +151,7 @@ public class FTPClient {
 
     public void PacketUtil_R_Request(){
         try {
-            sock.send(Fill_Request((short) 1,file.getName(),(short)1,file_length));
+            sock.send(Fill_Request((short) 1,file.getName(),(short)1,windowSize));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -161,10 +168,10 @@ public class FTPClient {
         MODE = kb.nextInt();
         ftpClient.windowSize = 10;
         String file_name = "file.txt";
+        ftpClient.file = new File(file_name);
 
         if (MODE == 2){
-            ftpClient.file = new File(file_name);
-            ftpClient.file_length = (int) ftpClient.file.length();
+            ftpClient.file_length = ftpClient.file.length();
             ftpClient.PacketUtil_W_Request();
         }else if(MODE==1){
 
