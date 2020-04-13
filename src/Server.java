@@ -77,7 +77,6 @@ public class Server {
         ByteBuffer Ack_Buff = ByteBuffer.allocate(4);
         ByteBuffer opcode_buff = ByteBuffer.allocate(1);
         DatagramPacket SYN = new DatagramPacket(buff.array(),buff.array().length);
-        DatagramPacket opcode_packet = new DatagramPacket(opcode_buff.array(),opcode_buff.array().length);
 
 
         serverSocket.receive(SYN);

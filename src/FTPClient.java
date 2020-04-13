@@ -49,40 +49,46 @@ public class FTPClient {
 
     public int Auth() throws IOException {
         Random r = new Random();
-        int mod_num;//Modulo num
-        int base;//base
-        int secret_Num = r.nextInt(600);//secret number
-        int A;
-        ByteBuffer buff = ByteBuffer.allocate(12);
-        ByteBuffer Ack_Buff = ByteBuffer.allocate(4);
-        ByteBuffer opcode_buff = ByteBuffer.allocate(1);
-        DatagramPacket SYN = new DatagramPacket(buff.array(),buff.array().length);
+
+        int mod_num = NumberGen.getPrime(600);//Public Modulo
+        int base= r.nextInt(600);//Public base
+        int secret_num = r.nextInt(600);//Secret number
+        int A = (int) Math.pow(base,secret_num) % mod_num;
+
+        ByteBuffer buff = ByteBuffer.allocate(12);// Stuffing are byte buffer
+
+        ByteBuffer ACK_Buff = ByteBuffer.allocate(4);
+        DatagramPacket Ack = new DatagramPacket(ACK_Buff.array(),ACK_Buff.array().length);
 
 
-        sock.receive(SYN);
-        buff.put(SYN.getData());
-        buff.flip();
-        mod_num = buff.getInt();
+
+
+        buff.putInt(mod_num);
         System.out.println("Modulo:"+mod_num);
-        base = buff.getInt();
+        buff.putInt(base);
         System.out.println("Base:"+base);
-        A = buff.getInt();
+        buff.putInt(A);
         System.out.println("Computed:"+A);
+        buff.flip();
 
 
-        int B = (int) Math.pow(base,secret_Num) % mod_num;
-        Ack_Buff.putInt(B);
-        Ack_Buff.flip();
-        System.out.println("Sending:"+ B);
+        DatagramPacket SYN  = new DatagramPacket(buff.array(),buff.array().length,address,PORT);
+        sock.send(SYN);
 
-        address = SYN.getAddress();
-        DatagramPacket ACK = new DatagramPacket(Ack_Buff.array(),Ack_Buff.array().length,SYN.getAddress(),SYN.getPort());
-        sock.send(ACK);
+        sock.receive(Ack);
+        ACK_Buff.put(Ack.getData());
+        ACK_Buff.flip();
 
-        int s = (int) Math.pow(A,secret_Num) % mod_num;
+        int B = ACK_Buff.getInt();
+        System.out.println("Bob sent:"+B);
 
-
+        int s = (int)Math.pow(B,secret_num) % mod_num;
         System.out.println("Key:"+s);
+
+
+
+
+
 
         return s;
     }
@@ -146,10 +152,11 @@ public class FTPClient {
 
 
     public static void main(String[] args) throws IOException {
-
-        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.11"),false,2770);
-        XOR = ftpClient.Auth();
         Scanner kb = new Scanner(System.in);
+        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.11"),false,2770);
+        System.out.println("[Waiting to Auth]");
+        XOR = ftpClient.Auth();
+        System.out.println("[Authed with]"+"\n"+"Host:"+address.getHostName()+"\n"+"Port:"+2770);
         System.out.println("Downloading from Server [2] or Uploading to Server [1]");
         MODE = kb.nextInt();
         ftpClient.windowSize = 10;
