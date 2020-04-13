@@ -169,27 +169,31 @@ public class Server {
 
 
         SlidingWindow window = new SlidingWindow(ps.getWindowSize(),ps.getmode(),ps);//Size must be from Client
-
-
-       while (window.null_counter != ps.file.length()){
+        s.serverSocket.close();
+        ps.datagramSocket = new DatagramSocket(2770);
+        while (window.null_counter != ps.file.length()/512){
 
 
            if (ps.getmode()==1){
                //INTIAL SEND OF DATA
                for (int i=0;i<ps.getWindowSize();i++){
                    s.serverSocket.send(window.Data_Window[i]);
+                   System.out.println("Sending Data");
                    window.add_Timer(i);
                }
                while(!(window.isFull(window.Ack_Window))){
                    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
                    DatagramPacket ack = new DatagramPacket(byteBuffer.array(),byteBuffer.array().length);
                    ps.PacketUtilRecieve(ack);
+                   System.out.println("Recieving ACK");
+
                    window.add_ACK(ack);
                    //iterate through timer's if any of them equall some number eg 3 seconds RESEND
                    for (int i =0;i<window.Data_Timer.length;i++){
                        // if window.Data_Timer[i] >= 3 seconds resend
                        if (System.nanoTime() - window.Data_Timer[i]>= 3000561965L) {
                            s.serverSocket.send(window.Data_Window[i]);
+                           System.out.println("Resending");
                        }
 
 
@@ -202,10 +206,12 @@ public class Server {
                for (DatagramPacket packet :window.Ack_Window){
 
                    window.remove((int)window.getData(ps.UnPack_Ack(packet)));
+                   System.out.println("Removing and unpacking ACKS");
                    // remove DataArray's By block number
 
                }
                window.Fill_Data_Array();
+               System.out.println("Reloading the window");
 
 
 
