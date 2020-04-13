@@ -27,10 +27,12 @@ public class FTPServer {
     long [] ACK_Timer;
 
 
-    public FTPServer(boolean V6) {
+    public FTPServer(boolean V6,int port) throws SocketException {
 
         V6_Mode = V6;
+        PORT = port;
 
+        sock = new DatagramSocket(PORT);
     }
     //Networking Functions
     public int Auth() throws IOException {
@@ -224,7 +226,7 @@ public class FTPServer {
 
     public static void main(String[] args) throws IOException {
 
-        FTPServer ftpServer = new FTPServer(false);
+        FTPServer ftpServer = new FTPServer(false,2770);
         XOR = ftpServer.Auth();
 
         String file = "file.txt";

@@ -17,10 +17,11 @@ public class FTPClient {
     static int MODE;
 
 
-    public FTPClient(InetAddress a, boolean V6){
+    public FTPClient(InetAddress a, boolean V6,int port) throws SocketException {
 
+        PORT = port;
         V6_Mode = V6;
-
+        sock = new DatagramSocket(PORT);
         if (V6_Mode){
             address = (Inet6Address)a;
         }else {
@@ -146,7 +147,7 @@ public class FTPClient {
 
     public static void main(String[] args) throws IOException {
 
-        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.11"),false);
+        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.11"),false,2770);
         XOR = ftpClient.Auth();
         Scanner kb = new Scanner(System.in);
         System.out.println("Downloading from Server [2] or Uploading to Server [1]");
