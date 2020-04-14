@@ -19,13 +19,6 @@ public class FTPServer {
     static int MODE;
     long file_length;// used for when we are downloading a file
 
-    //Sliding Window Stuff
-    ArrayList<DatagramPacket> Data_Buffer;
-    DatagramPacket[] Data_Window;
-    long [] Data_Timer;
-    DatagramPacket [] Ack_Window;
-    long [] ACK_Timer;
-
 
     public FTPServer(boolean V6,int port) throws SocketException {
 
@@ -74,7 +67,7 @@ public class FTPServer {
 
         return s;
     }
-    public static byte [] hash(byte[] input){
+    public byte [] hash(byte [] input){
         // Define XOR key
         // Any character value will work
 
@@ -91,42 +84,6 @@ public class FTPServer {
         }
         return output;
     }
-
-    public void Fill_Data() throws IOException {
-
-        Data_Buffer = new ArrayList<>((int)file.length());
-
-        RandomAccessFile ra = new RandomAccessFile(file, "r");
-
-        byte[] data = new byte[512];
-
-        for (long i=0;i<file.length();i++) {
-            ra.seek(i);
-
-            ra.read(data);
-
-            ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + 512);
-
-            buffer.putShort((short) i);
-
-            buffer.put(data);
-
-            buffer.flip();
-
-            DatagramPacket packet;
-
-            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, address, PORT);
-
-            Data_Buffer.add(packet);
-
-        }
-        ra.close();
-
-    } // Use when sending file
-
-    public void Prep_Data(){
-        Data_Buffer = new ArrayList<>((int)file_length);
-    }//used when downloading data
 
 
     public void PacketUtilSendFileLength() throws IOException {
@@ -190,28 +147,34 @@ public class FTPServer {
         buffer.put(hash(p.getData()));
         buffer.flip();
 
-        //System.out.println("Opcode:"+buffer.getShort());
         short opcode = buffer.getShort();
-        //System.out.println("Mode:"+buffer.getShort());
-        MODE = buffer.getShort();
-        //System.out.println("size:"+buffer.getShort());
+        System.out.println("Opcode:"+opcode);
+
+        short mode = buffer.getShort();
+        System.out.println("Mode:"+mode);
+
         windowSize = buffer.getShort();
-        //System.out.println("Length:"+buffer.getInt());
+        System.out.println("windowsize:"+windowSize);
+
         file_length = buffer.getLong();
 
-        byte [] b = new byte[255];
+        System.out.println("Length:"+file_length);
+
+        byte[] b = new byte[255];
         buffer.get(b);
         //System.out.println("Filename"+new String(b).trim());
         String name = new String(b).trim();
-        System.out.println(name);
+        //System.out.println(name);
         file = new File(name);
         if (opcode == 1) {
             //Mode 1 : I AM READING FROM HOST
-
+            MODE = 1;
             file_length = file.length();
 
         } else if (opcode == 2) {
             //Mode 2 : I AM BEING READ FROM
+            MODE = 2;
+
             if (file.createNewFile()) {
                 System.out.println("File created: " + file.getName());
             } else {
@@ -282,6 +245,7 @@ public class FTPServer {
         return buff.getShort();
     }
 
+
     public static void main(String[] args) throws IOException {
 
         FTPServer ftpServer = new FTPServer(false,2770);
@@ -300,7 +264,7 @@ public class FTPServer {
 
         if (MODE == 1){
 
-            while (!(window.isFull(window.Data_Array))){//TODO change to when Data array != full
+            while (!(window.isFull(window.Data_Array))){
                 ByteBuffer b = ByteBuffer.allocate(512);
                 DatagramPacket packet = new DatagramPacket(b.array(),b.array().length);
                 ftpServer.sock.receive(packet);
@@ -334,7 +298,7 @@ public class FTPServer {
             }
 
             //wait for ACK packet then check timers
-            while (!(window.isFull(window.Ack_Array))) {//TODO change to when ACK array != full
+            while (!(window.isFull(window.Ack_Array))) {
                 ByteBuffer buff = ByteBuffer.allocate(4);
                 DatagramPacket pa = new DatagramPacket(buff.array(),buff.array().length);
                 ftpServer.sock.receive(pa);
