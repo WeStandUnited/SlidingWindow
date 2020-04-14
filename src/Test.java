@@ -1,43 +1,89 @@
+import jdk.swing.interop.SwingInterOpUtils;
+
 import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.RandomAccess;
 import java.util.concurrent.TimeUnit;
 
 public class Test {
-    static byte [] encryptDecrpyt(byte [] input){
-        // Define XOR key
-        // Any character value will work
-        int xorKey = 7;
+    public static DatagramPacket Fill_Request(short opcode,String Filename, short mode,int size) throws UnknownHostException {
+        System.out.println("PACKING");
+        DatagramPacket packet = null;
 
-        // Define String to store encrypted/decrypted String
-        byte[] output = new byte[input.length];
+        ByteBuffer buff = ByteBuffer.allocate(2+2+2+8+255);//Opcode + Window Length + Name
 
-        // calculate length of input string
-        int len = input.length;
+        buff.putShort((short) opcode);//2bytes
 
-        // perform XOR operation of key
-        // with every caracter in string
-        for (int i = 0; i < len; i++) {
-            output[i] = (byte)(input[i] ^ xorKey);
-        }
-        return output;
+        System.out.println("opcode:"+opcode);
+
+        buff.putShort((short) mode);//2 bytes
+
+        System.out.println("mode :"+mode);
+
+        buff.putShort((short) size);//2 bytes
+
+        System.out.println("window size :"+size);
+
+        buff.putLong(1000);//8 bytes
+        System.out.println("file_length:"+1000);
+
+        buff.put(Filename.getBytes());//255 max bytes
+
+        buff.flip();
+
+        packet = new DatagramPacket(buff.array(), buff.array().length, Inet4Address.getByName("127.0.0.1"),2770);
+
+
+
+        return packet;
+    }
+    public static void Unpack_Request(DatagramPacket p) throws IOException {
+        System.out.println("UNPACKING");
+        ByteBuffer buffer = ByteBuffer.allocate(2+2+2+8+255);
+        buffer.put(p.getData());
+        buffer.flip();
+
+       // short opcode = buffer.getShort();
+        System.out.println("Opcode:"+buffer.getShort());
+
+        //short mode = buffer.getShort();
+        System.out.println("Mode:"+buffer.getShort());
+
+        System.out.println("size:"+buffer.getShort());
+        //short windowSize = buffer.getShort();
+        //System.out.println("Length:"+buffer.getInt());
+        long file_length = buffer.getLong();
+        System.out.println("File l:"+file_length);
+        byte b [] = new byte[255];
+        buffer.get(b);
+        //System.out.println("Filename"+new String(b).trim());
+        String name = new String(b).trim();
+        //System.out.println(name);
+        System.out.println(name);
+
+
+
+
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
 
-        long startTime = System.nanoTime();
-        System.out.println(startTime);
-        TimeUnit.SECONDS.sleep(3);
+//        long startTime = System.nanoTime();
+//        System.out.println(startTime);
+//        TimeUnit.SECONDS.sleep(3);
+//
+//        long estimatedTime = System.nanoTime() - startTime;
+//        System.out.println(estimatedTime);
 
-        long estimatedTime = System.nanoTime() - startTime;
-        System.out.println(estimatedTime);
-
+        Unpack_Request(Fill_Request((short)2,"file.txt", (short)2,120));
 
     }
 }
