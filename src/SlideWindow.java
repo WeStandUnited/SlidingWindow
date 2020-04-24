@@ -8,20 +8,21 @@ import java.util.ArrayList;
 
 public class SlideWindow{
     int null_counter = 0;
-    DatagramPacket[] Data_Array ;
-    DatagramPacket [] Ack_Array;
-    long [] Data_Timer;
-    long [] ACK_Timer;
+    DatagramPacket[] Data_Array = null;
+    DatagramPacket [] Ack_Array= null;
+    long [] Data_Timer = null;
     ArrayList<DatagramPacket> DataBuffer;
     File file;
     InetAddress host;
     int port;
     int XOR;
-    int size;
+    int size = 0;
+    int ACK_Bookkeeping;
+    int Data_Bookkeeping;
 
-    public SlideWindow(int size,int Buffer_Size,int hasher)
+    public SlideWindow(int s,int Buffer_Size,int hasher)
     {
-        size = this.size;
+        size = s;
         DataBuffer=new ArrayList<>(Buffer_Size/512);
         Data_Array=new DatagramPacket[size];
         Ack_Array=new DatagramPacket[size];
@@ -60,17 +61,24 @@ public class SlideWindow{
 
         RandomAccessFile ra = new RandomAccessFile(file, "r");
 
-        byte[] data = new byte[512];
 
-        for (long i=0;i<file.length();i++) {
+        for (long i = 0; i < file.length(); i += 510) {
+            byte[] data = new byte[510];
+
             ra.seek(i);
 
             ra.read(data);
 
-            ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + 512);
+            ByteBuffer buffer = ByteBuffer.allocate(512);
 
+
+            System.out.println("AddBlock_Num:"+i);
             buffer.putShort((short) i);
 
+            String s = new String(data);
+
+           // System.out.println("[Placing]"+s);
+            //System.out.println(s.length());
             buffer.put(data);
 
             buffer.flip();
@@ -78,8 +86,10 @@ public class SlideWindow{
             DatagramPacket packet;
 
             packet = new DatagramPacket(hash(buffer.array()), buffer.array().length,host, port);
-
+            System.out.println("Data PAcket:"+packet.getLength());
             DataBuffer.add(packet);
+           // System.out.println("[Data Buffer]Add:"+i);
+           // System.out.println(new String(hash(packet.getData())));
 
         }
         ra.close();
@@ -99,10 +109,28 @@ public class SlideWindow{
         buff.put(raw_packet);
         buff.flip();
 
-        buff.getShort();
+        //buff.getShort();
 
         return buff.getShort();
     }
+        public short getACKBlockNumber(DatagramPacket p){
+
+            int data_size = p.getLength();
+
+            byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
+
+
+
+            //switch statement telling the bytes to
+
+            ByteBuffer buff = ByteBuffer.allocate(data_size);
+            buff.put(raw_packet);
+            buff.flip();
+
+            buff.getShort();
+
+            return buff.getShort();
+        }
     public short getData(short blocknum) throws IOException {
         for (int i=0;i<size;i++){
             DatagramPacket p = Data_Array[i];
@@ -113,36 +141,56 @@ public class SlideWindow{
         }
         return -1;
     }
-    public void add_Data(DatagramPacket p){// adds data into data window
+    public void add_Data(DatagramPacket p,int index){// adds data into data window
 
-        for (int i = size-1; i>-1 ; i--) {
+        //for (int i = size-1; i>-1 ; i--) {
+       // System.out.println("[Data Array]:Add"+index);
+       Data_Array[index] = p;
+       Data_Bookkeeping++;
+
+
+    }
+    public void add_Data(DatagramPacket p){// adds data into data window
+        //for (int i = size-1; i>=0 ; i--)
+        for (int i = 0; i<size ; i++)
+        {
 
             if (Data_Array[i] == null){
+           //     System.out.println("[Data Array]:Add"+i);
 
                 Data_Array[i] = p;
+                Data_Bookkeeping++;
+
             }
 
         }
 
-
     }
-
     public int checkTimers(){
+        System.out.print("Timers:[");
         for (int i =0;i<Data_Timer.length;i++){
             // if window.Data_Timer[i] >= 3 seconds resend
-            if (System.nanoTime() - Data_Timer[i]>= 3000561965L) {
+            System.out.print(System.nanoTime() - Data_Timer[i]+",");
+            if (System.nanoTime() - Data_Timer[i]>= 6000561965L) {
                 return i;
             }
 
 
         }
+        System.out.print("]\n");
+
         return -1;
     }
 
-    public void Fill_Data_Array() throws IOException {//fills the data Window with Packets from the Data Buffer
-
-        for (int j = 0; j < this.size; j++){
-            add_Data(DataBuffer.get(j+null_counter));
+    public void Fill_Data_Array() throws IOException {//if fill is not even then may produce INDEX OUT OF BOUNDS
+        try {
+            int lastvalue =0;
+            for (int j = 0; j < Data_Array.length; j++) {
+                lastvalue = j;
+                add_Data(DataBuffer.get(j + null_counter), j);
+            }
+        } catch (IndexOutOfBoundsException a){
+            return;
         }
     }
 
@@ -150,11 +198,46 @@ public class SlideWindow{
         Data_Array[index] = null;
         Data_Timer[index] = 0;
         null_counter++;
+        Data_Bookkeeping--;
+        ACK_Bookkeeping--;
+        if (Data_Bookkeeping < 0)Data_Bookkeeping =0;
+        if (ACK_Bookkeeping < 0)ACK_Bookkeeping =0;
+
+    }
+    public void removeByBlockNum(int blockNum) {
+
+        for (int i = 0; i <Data_Array.length ; i++) {
+
+            if (Data_Array[i] != null) {
+                if (blockNum == getBlockNumber(Data_Array[i])) {
+                    Data_Array[i] = null;
+                    null_counter++;
+                }
+
+            }
+        }
+
+
+    }
+
+
+    public void removeData(int index) {//TODO instead of removing by index remove by matching block number
+
+      //  if (index-null_counter < 0) {
+
+      //  }else {
+            Data_Array[index - null_counter] = null;
+            Data_Timer[index - null_counter] = 0;
+            null_counter++;
+            Data_Bookkeeping--;
+            if (Data_Bookkeeping < 0) Data_Bookkeeping = 0;
+       // }
     }
     public void clearAcks(){
         for (int i=0;i<size;i++){
             Ack_Array[i] = null;
         }
+        ACK_Bookkeeping =0;
     }
     public boolean add_ACK(DatagramPacket p){
         //True in meaning successful
@@ -163,6 +246,7 @@ public class SlideWindow{
             if (Ack_Array[i] == null){
 
                 Ack_Array[i] = p;
+                ACK_Bookkeeping++;
                 return true;
             }
 
@@ -172,16 +256,6 @@ public class SlideWindow{
     }
 
 
-    public boolean isFull(DatagramPacket [] p){
-
-        for (int x=0; x < p.length; x++)
-            if (x == p.length - 1){
-                return true;
-            }
-
-
-        return false;
-    }
     public void shift(int offset){
 
 
