@@ -4,6 +4,7 @@ import java.io.RandomAccessFile;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -111,10 +112,11 @@ public class FTPClient {
         sock.receive(packet);
         buffer.put(hash(packet.getData()));
         buffer.flip();
-        file_length = (int)buffer.getLong();
+        file_length = buffer.getLong();
+        System.out.println("File Length gotten");
 
     }
-    public DatagramPacket Fill_Request(short opcode,String Filename, short mode,int size) {
+    public DatagramPacket Fill_Request(short opcode,String Filename, short mode,int size) throws IOException {
         DatagramPacket packet = null;
 
         ByteBuffer buff = ByteBuffer.allocate(2+2+2+8+255);//Opcode + Window Length + Name
@@ -133,6 +135,8 @@ public class FTPClient {
 
         buff.putLong(file_length);//8 bytes
         System.out.println("file_length:"+file_length);
+
+
 
         buff.put(Filename.getBytes());//255 max bytes
 
@@ -173,7 +177,7 @@ public class FTPClient {
         buff.put(raw_packet);
         buff.flip();
 
-        buff.getShort();
+        // buff.getShort();
 
         return buff.getShort();
     }
@@ -187,56 +191,76 @@ public class FTPClient {
         buffer.flip();
 
 
-            packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, address, PORT);
+        packet = new DatagramPacket(hash(buffer.array()), buffer.array().length, address, PORT);
 
 
 
         return packet;
     }
     public short UnPack_Data(DatagramPacket p) throws IOException {// Returns Void due to it just taking care of writing to the File
-        RandomAccessFile ra = new RandomAccessFile(file, "w");
-        ByteBuffer buffer = ByteBuffer.allocate(2 + 2 + 512);
-        buffer.put(p.getData());
-        buffer.flip();
+        RandomAccessFile ra = new RandomAccessFile(file, "rw");
+        ByteBuffer buffer = ByteBuffer.allocate(512);
+        // System.out.println("Packet Size:"+p.getLength());
+        if (p==null){
+            return -1;
 
-        buffer.getShort();
+        }else {
 
-        short BlockNum = buffer.getShort();
+            buffer.put(hash(p.getData()));
+            buffer.flip();
 
-        byte[] data = new byte[512];
+            short BlockNum = buffer.getShort();
+
+            System.out.println("BlockNum:" + BlockNum);
+
+            byte[] bytes = new byte[510];
 
 
+            buffer.get(bytes, 0, bytes.length);
 
-        ra.seek((long) BlockNum);
+            ra.seek((long) BlockNum);
 
-        ra.write(buffer.get(data).array());
+            String str = new String(bytes);
+            System.out.println("DATA:" + str);
+            ra.write(bytes);
 
-        ra.close();
+            ra.close();
 
-        // Write to file
+            // Write to file
 
-        return BlockNum;
+            return BlockNum;
+        }
     }
 
     public static void main(String[] args) throws IOException {
         Scanner kb = new Scanner(System.in);
-        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.11"),false,2770);
+        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.7"),false,2770);
         System.out.println("[Waiting to Auth]");
         XOR = ftpClient.Auth();
         System.out.println("[Authed with]"+"\n"+"Host:"+address.getHostName()+"\n"+"Port:"+2770);
         System.out.println("Downloading from Server [2] or Uploading to Server [1]");
         MODE = kb.nextInt();
         ftpClient.windowSize = 10;
-        String file_name = "file.txt";
+
+        String file_name = "commanumbers.txt";
         ftpClient.file = new File(file_name);
+        boolean result = ftpClient.file.createNewFile();
+
+        if (result){
+            System.out.println("File created:"+ftpClient.file.getName());
+        }else{
+            System.out.println("File Exists");
+        }
+
 
         if (MODE == 2){
-            ftpClient.file_length = ftpClient.file.length();
             ftpClient.PacketUtil_W_Request();
-        }else if(MODE==1){
-
-            ftpClient.PacketUtil_R_Request();
             ftpClient.PacketUtilRecieveFileLength();
+            System.out.println("[New File length]:"+ ftpClient.file_length);
+        }else if(MODE==1){
+            ftpClient.file_length = ftpClient.file.length();
+            ftpClient.PacketUtil_R_Request();
+            //ftpClient.PacketUtilSendFileLength();
             System.out.println("[New File length]:"+ ftpClient.file_length);
         }
 
@@ -244,68 +268,109 @@ public class FTPClient {
         //make window structure
         SlideWindow window = new SlideWindow(ftpClient.windowSize,(int)ftpClient.file_length,XOR);
         window.setFile(ftpClient.file);
+        window.host = address;
+        window.port = PORT;
         //if Downloading from the Server
-        if (MODE == 1){
 
-            while (!(window.isFull(window.Data_Array))){//TODO change to when Data array != full
-                ByteBuffer buffer = ByteBuffer.allocate(512);
-                DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
-                ftpClient.sock.receive(p);
-                window.add_Data(p);
+        if (MODE == 2){
+
+            int end_control =0;
+
+            while (end_control != ftpClient.file_length/512) {
+
+                //while ((window.isFull(window.Data_Array))){//TODO change to when Data array != full
+                for (int i = 0; i < ftpClient.windowSize; i++) {
+                    ByteBuffer buffer = ByteBuffer.allocate(512);
+                    DatagramPacket p = new DatagramPacket(buffer.array(), buffer.array().length);
+                    ftpClient.sock.receive(p);
+                    System.out.println("Recieved Packet!");
+                    short blockNum = ftpClient.getBlockNumber(p);
+                    System.out.println("BlockNum:"+blockNum);
+                    if (blockNum == -1){
+                        break;
+                    }
+                    window.add_Data(p, i);
+
+                }
+                for (int i = 0; i < ftpClient.windowSize; i++) {
+
+                    short index = ftpClient.UnPack_Data(window.Data_Array[i]);
+                    if (index == -1){
+                        System.out.println("File Transfer Complete!");
+                        System.exit(1);
+                    }else {
+                        ftpClient.sock.send(ftpClient.Fill_Ack(index));
+                        System.out.println("Sending ACKS");
+                        end_control++;
+                        window.remove(i);
+                    }
+                }
+
+
             }
-            for(int i=0;i<ftpClient.windowSize;i++){
 
-                ftpClient.sock.send(ftpClient.Fill_Ack(ftpClient.UnPack_Data(window.Data_Array[i])));
-                window.remove(i);
-            }
-
-
-
-
-
-
-        }else if (MODE == 2){
+        }else if (MODE == 1) {
             window.Fill_Data();
-
+            int end_control = 0;
             //if uploading to the server
 
             //fill data buffer with file
             //fill data array
-            window.Fill_Data_Array();
-            //send
-            for (int i=0;i<ftpClient.windowSize;i++) {
-            ftpClient.sock.send(window.Data_Array[i]);
-            window.add_Timer(i);//set timers
 
+            while (end_control != window.DataBuffer.size()-1) {
+                window.Fill_Data_Array();
+                //send
 
-            }
-
-            //wait for ACK packet then check timers
-            while (!(window.isFull(window.Ack_Array))) {//TODO change to when ACK array != full
-                ByteBuffer buffer = ByteBuffer.allocate(4);
-                DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
-                ftpClient.sock.receive(p);
-                window.add_ACK(p);
-                window.remove(window.getData(ftpClient.getBlockNumber(p)));
-                //check all timers
-                int index = window.checkTimers();
-                if (index != -1){
-                    ftpClient.sock.send(window.Data_Array[index]);
+                for (int i = 0; i < ftpClient.windowSize; i++) {
+                    try {
+                        ftpClient.sock.send(window.Data_Array[i]);// TODO not sending full file because the array doesnt get full bc end of file!
+                        System.out.println("Sending BlockNum:" + ftpClient.getBlockNumber(window.Data_Array[i]));
+                        window.add_Timer(i);//set timers
+                    }catch (NullPointerException c){// Send a packet with a negative block number
+                        ByteBuffer bb = ByteBuffer.allocate(512);
+                        bb.putShort((short) -1);
+                        bb.flip();
+                        DatagramPacket packet;
+                        packet = new DatagramPacket(ftpClient.hash(bb.array()), bb.array().length,address, PORT);
+                        ftpClient.sock.send(packet);
+                        break;
+                    }
                 }
+
+                //wait for ACK packet then check timers
+                while (window.ACK_Bookkeeping != window.size) {
+                    ByteBuffer buff = ByteBuffer.allocate(4);
+                    DatagramPacket pa = new DatagramPacket(buff.array(), buff.array().length);
+                    if (end_control==window.DataBuffer.size()){
+                        System.out.println("File Transfer Complete");
+                        System.exit(1);
+                    }
+                    System.out.println("Awaiting ACKS");
+                    ftpClient.sock.receive(pa);
+                    System.out.println("Ack Recieved!");
+                    int acknum = window.getACKBlockNumber(pa);
+                    System.out.println("ACK BLock Recieved:" + acknum);
+
+                    window.add_ACK(pa);
+
+                    window.removeByBlockNum(acknum);
+                    end_control++;
+                    System.out.println("[null counter]:"+window.null_counter);
+
+                    //check all timers
+                    //   int index = window.checkTimers();
+                    // if (index != -1) {
+                    //       ftpClient.sock.send(window.Data_Array[index]);
+                    //  }
+                }
+                window.clearAcks();
+
+
             }
-            window.clearAcks();
-
-
-
         }
 
 
-
-
-
-
-
-
+        System.out.println("File Transfer Complete!");
 
     }
 }

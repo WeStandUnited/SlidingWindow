@@ -1,10 +1,7 @@
 import jdk.swing.interop.SwingInterOpUtils;
 
 import javax.xml.crypto.Data;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -74,6 +71,40 @@ public class Test {
 
     }
 
+    public static void readFile(File file) throws IOException {
+
+
+        RandomAccessFile ra = new RandomAccessFile(file, "r");
+
+
+        for (long i = 0; i < file.length(); i += 510) {
+            byte[] data = new byte[510];
+
+            ra.seek(i);
+
+            ra.read(data);
+
+
+
+            //System.out.println("AddBlock_Num:" + i);
+
+            String s = new String(data);
+
+            System.out.println("DATA:"+s);
+        }
+    }
+
+    public static boolean PacketLoss(){
+        Random rand = new Random();
+        int testy = 0;
+
+        testy=rand.nextInt(1000);
+        System.out.println(testy);
+
+        return testy == 100;
+    }
+
+
     public static void main(String[] args) throws InterruptedException, IOException {
 
 //        long startTime = System.nanoTime();
@@ -83,7 +114,6 @@ public class Test {
 //        long estimatedTime = System.nanoTime() - startTime;
 //        System.out.println(estimatedTime);
 
-        Unpack_Request(Fill_Request((short)2,"file.txt", (short)2,120));
 
     }
 }
