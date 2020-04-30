@@ -163,7 +163,7 @@ public class FTPClient {
             e.printStackTrace();
         }
     }
-    public short getBlockNumber(DatagramPacket p){
+    public long getBlockNumber(DatagramPacket p){
 
         int data_size = p.getLength();
 
@@ -179,15 +179,15 @@ public class FTPClient {
 
         // buff.getShort();
 
-        return buff.getShort();
+        return buff.getLong();
     }
-    public DatagramPacket Fill_Ack(short BlockNum) {
+    public DatagramPacket Fill_Ack(long BlockNum) {
 
         DatagramPacket packet = null;
 
-        ByteBuffer buffer = ByteBuffer.allocate(4);
+        ByteBuffer buffer = ByteBuffer.allocate(10);
         buffer.putShort((short) 4);//opcode
-        buffer.putShort(BlockNum);
+        buffer.putLong(BlockNum);
         buffer.flip();
 
 
@@ -197,7 +197,7 @@ public class FTPClient {
 
         return packet;
     }
-    public short UnPack_Data(DatagramPacket p) throws IOException {// Returns Void due to it just taking care of writing to the File
+    public long UnPack_Data(DatagramPacket p) throws IOException {// Returns Void due to it just taking care of writing to the File
         RandomAccessFile ra = new RandomAccessFile(file, "rw");
         ByteBuffer buffer = ByteBuffer.allocate(512);
         // System.out.println("Packet Size:"+p.getLength());
@@ -209,19 +209,21 @@ public class FTPClient {
             buffer.put(hash(p.getData()));
             buffer.flip();
 
-            short BlockNum = buffer.getShort();
+            long BlockNum = buffer.getLong();
 
             System.out.println("BlockNum:" + BlockNum);
 
-            byte[] bytes = new byte[510];
+            byte[] bytes = new byte[504];
 
 
             buffer.get(bytes, 0, bytes.length);
 
-            ra.seek((long) BlockNum);
+            ra.seek(BlockNum);
 
             String str = new String(bytes);
             System.out.println("DATA:" + str);
+
+
             ra.write(bytes);
 
             ra.close();
@@ -284,17 +286,27 @@ public class FTPClient {
                     DatagramPacket p = new DatagramPacket(buffer.array(), buffer.array().length);
                     ftpClient.sock.receive(p);
                     System.out.println("Recieved Packet!");
-                    short blockNum = ftpClient.getBlockNumber(p);
+                    long blockNum = ftpClient.getBlockNumber(p);
                     System.out.println("BlockNum:"+blockNum);
                     if (blockNum == -1){
                         break;
                     }
                     window.add_Data(p, i);
+//                    long index = ftpClient.UnPack_Data(window.Data_Array[i]);
+//                    if (index == -1){
+//                        System.out.println("File Transfer Complete!");
+//                        System.exit(1);
+//                    }else {
+//                        ftpClient.sock.send(ftpClient.Fill_Ack(index));
+//                        System.out.println("Sending ACKS");
+//                        end_control++;
+//                        window.remove(i);
+//                    }
 
                 }
                 for (int i = 0; i < ftpClient.windowSize; i++) {
 
-                    short index = ftpClient.UnPack_Data(window.Data_Array[i]);
+                    long index = ftpClient.UnPack_Data(window.Data_Array[i]);
                     if (index == -1){
                         System.out.println("File Transfer Complete!");
                         System.exit(1);
@@ -328,7 +340,7 @@ public class FTPClient {
                         window.add_Timer(i);//set timers
                     }catch (NullPointerException c){// Send a packet with a negative block number
                         ByteBuffer bb = ByteBuffer.allocate(512);
-                        bb.putShort((short) -1);
+                        bb.putLong(-1);
                         bb.flip();
                         DatagramPacket packet;
                         packet = new DatagramPacket(ftpClient.hash(bb.array()), bb.array().length,address, PORT);
@@ -348,7 +360,7 @@ public class FTPClient {
                     System.out.println("Awaiting ACKS");
                     ftpClient.sock.receive(pa);
                     System.out.println("Ack Recieved!");
-                    int acknum = window.getACKBlockNumber(pa);
+                    long acknum = window.getACKBlockNumber(pa);
                     System.out.println("ACK BLock Recieved:" + acknum);
 
                     window.add_ACK(pa);
