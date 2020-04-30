@@ -62,10 +62,10 @@ public class SlideWindow{
         RandomAccessFile ra = new RandomAccessFile(file, "r");
 
 
-        for (long i = 0; i < file.length(); i += 510) {
+        for (long i = 0; i < file.length(); i +=510) {//changed i+= 510 -> i++
             byte[] data = new byte[510];
 
-            ra.seek(i);
+            ra.seek(i);//changed from i -> i*510
 
             ra.read(data);
 
@@ -73,11 +73,11 @@ public class SlideWindow{
 
 
             System.out.println("AddBlock_Num:"+i);
-            buffer.putShort((short) i);
+            buffer.putLong(i);
 
             String s = new String(data);
 
-           // System.out.println("[Placing]"+s);
+            // System.out.println("[Placing]"+s);
             //System.out.println(s.length());
             buffer.put(data);
 
@@ -86,16 +86,16 @@ public class SlideWindow{
             DatagramPacket packet;
 
             packet = new DatagramPacket(hash(buffer.array()), buffer.array().length,host, port);
-            System.out.println("Data PAcket:"+packet.getLength());
+            System.out.println("Data Packet:"+packet.getLength());
             DataBuffer.add(packet);
-           // System.out.println("[Data Buffer]Add:"+i);
-           // System.out.println(new String(hash(packet.getData())));
+            // System.out.println("[Data Buffer]Add:"+i);
+            // System.out.println(new String(hash(packet.getData())));
 
         }
         ra.close();
 
     } // Use when sending file
-    public short getBlockNumber(DatagramPacket p){
+    public long getBlockNumber(DatagramPacket p){
 
         int data_size = p.getLength();
 
@@ -111,27 +111,27 @@ public class SlideWindow{
 
         //buff.getShort();
 
-        return buff.getShort();
+        return buff.getLong();
     }
-        public short getACKBlockNumber(DatagramPacket p){
+    public Long getACKBlockNumber(DatagramPacket p){
 
-            int data_size = p.getLength();
+        int data_size = p.getLength();
 
-            byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
+        byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
 
 
 
-            //switch statement telling the bytes to
+        //switch statement telling the bytes to
 
-            ByteBuffer buff = ByteBuffer.allocate(data_size);
-            buff.put(raw_packet);
-            buff.flip();
+        ByteBuffer buff = ByteBuffer.allocate(data_size);
+        buff.put(raw_packet);
+        buff.flip();
 
-            buff.getShort();
+        buff.getShort();
 
-            return buff.getShort();
-        }
-    public short getData(short blocknum) throws IOException {
+        return buff.getLong();
+    }
+    public long getData(long blocknum) throws IOException {
         for (int i=0;i<size;i++){
             DatagramPacket p = Data_Array[i];
             if (blocknum == getBlockNumber(p)){
@@ -144,9 +144,9 @@ public class SlideWindow{
     public void add_Data(DatagramPacket p,int index){// adds data into data window
 
         //for (int i = size-1; i>-1 ; i--) {
-       // System.out.println("[Data Array]:Add"+index);
-       Data_Array[index] = p;
-       Data_Bookkeeping++;
+        // System.out.println("[Data Array]:Add"+index);
+        Data_Array[index] = p;
+        Data_Bookkeeping++;
 
 
     }
@@ -156,7 +156,7 @@ public class SlideWindow{
         {
 
             if (Data_Array[i] == null){
-           //     System.out.println("[Data Array]:Add"+i);
+                //     System.out.println("[Data Array]:Add"+i);
 
                 Data_Array[i] = p;
                 Data_Bookkeeping++;
@@ -204,7 +204,7 @@ public class SlideWindow{
         if (ACK_Bookkeeping < 0)ACK_Bookkeeping =0;
 
     }
-    public void removeByBlockNum(int blockNum) {
+    public void removeByBlockNum(long blockNum) {
 
         for (int i = 0; i <Data_Array.length ; i++) {
 
@@ -223,15 +223,15 @@ public class SlideWindow{
 
     public void removeData(int index) {//TODO instead of removing by index remove by matching block number
 
-      //  if (index-null_counter < 0) {
+        //  if (index-null_counter < 0) {
 
-      //  }else {
-            Data_Array[index - null_counter] = null;
-            Data_Timer[index - null_counter] = 0;
-            null_counter++;
-            Data_Bookkeeping--;
-            if (Data_Bookkeeping < 0) Data_Bookkeeping = 0;
-       // }
+        //  }else {
+        Data_Array[index - null_counter] = null;
+        Data_Timer[index - null_counter] = 0;
+        null_counter++;
+        Data_Bookkeeping--;
+        if (Data_Bookkeeping < 0) Data_Bookkeeping = 0;
+        // }
     }
     public void clearAcks(){
         for (int i=0;i<size;i++){
