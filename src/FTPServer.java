@@ -270,11 +270,10 @@ public class FTPServer {
 
         XOR = ftpServer.Auth();
         ByteBuffer buffer = ByteBuffer.allocate(269);
-        //ftpServer.packetLoss = true;
+        ftpServer.packetLoss = true;
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
         ftpServer.sock.receive(p);
         ftpServer.Unpack_Request(p);
-        ftpServer.PacketUtilSendFileLength();
         System.out.println("Sent:"+ftpServer.file_length);
         SlideWindow window = new SlideWindow(ftpServer.windowSize,(int)ftpServer.file_length,XOR);
         window.setFile(ftpServer.file);
@@ -283,53 +282,63 @@ public class FTPServer {
 
         //if Downloading from the Server
 
+
         if (MODE == 1){
 
+
             int end_control =0;
+            ftpServer.sock.setSoTimeout(2500);
 
             while (end_control != ftpServer.file_length/512) {
+                // ftpClient.sock.setSoTimeout(3000);
 
+                //while ((window.isFull(window.Data_Array))){//TODO change to when Data array != full
                 for (int i = 0; i < ftpServer.windowSize; i++) {
-                    ByteBuffer b = ByteBuffer.allocate(512);
-                    DatagramPacket pa = new DatagramPacket(b.array(), b.array().length);
-                    ftpServer.sock.receive(pa);
-                    System.out.println("Recieved Packet!");
-                    long blockNum = ftpServer.getBlockNumber(pa);
-                    System.out.println("BlockNum:"+blockNum);
-                    if (blockNum == -1){
+                    ByteBuffer bufbfer = ByteBuffer.allocate(512);
+                    DatagramPacket pa = new DatagramPacket(bufbfer.array(), bufbfer.array().length);
+                    try {
+                        ftpServer.sock.receive(pa);
+                        System.out.println("Recieved Packet!");
+                        long blockNum = ftpServer.getBlockNumber(pa);
+                        System.out.println("BlockNum:" + blockNum);
+                        if (blockNum == -1) {
+                            System.out.println("File Transfer Complete!");
+                            System.exit(1);
+                        }
+                        long index = ftpServer.UnPack_Data(pa);
+                        window.add_ACK(ftpServer.Fill_Ack(index));
+                    }catch (SocketTimeoutException e) {
+                        System.out.println("Timeout!");
                         break;
                     }
-                    window.add_Data(pa, i);
-
-                }
-                for (int i = 0; i < ftpServer.windowSize; i++) {
-
-                    long index = ftpServer.UnPack_Data(window.Data_Array[i]);
-                    if (index == -1){
-                        System.out.println("File Transfer Complete!");
-                        System.exit(1);
-                    }else {
-                        ftpServer.sock.send(ftpServer.Fill_Ack(index));
-                        System.out.println("Sending ACKS");
-                        end_control++;
-                        window.remove(i);
-                    }
                 }
 
-
+                for (int i = 0; i < window.ACK_Bookkeeping; i++) {
+                    ftpServer.sock.send(window.Ack_Array[i]);
+                    System.out.println("Sending ACKS"+window.getACKBlockNumber(window.Ack_Array[i]));
+                    end_control++;
+                    window.remove(i);
+                }
+                window.clearAcks();
             }
 
         }else if (MODE == 2) {
+            ftpServer.PacketUtilSendFileLength();
+            ftpServer.sock.setSoTimeout(5000);
             window.Fill_Data();
             int end_control = 0;
+            int timout_Counter=0;
             //if uploading to the server
 
             //fill data buffer with file
             //fill data array
 
-            while (end_control != window.DataBuffer.size()-1) {
+            while (end_control != window.DataBuffer.size()) {
                 window.Fill_Data_Array();
                 //send
+                ftpServer.sock.setSoTimeout(3000);
+
+
 
                 for (int i = 0; i < ftpServer.windowSize; i++) {
                     try {
@@ -340,47 +349,14 @@ public class FTPServer {
                                 faulty_packet.setPort(9999);
                                 ftpServer.sock.send(faulty_packet);// TODO not sending full file because the array doesnt get full bc end of file!
                                 System.out.println("Sending DuD:" + ftpServer.getBlockNumber(window.Data_Array[i]));
-                                window.add_Timer(i);//set timers
                             }else{
                                 ftpServer.sock.send(window.Data_Array[i]);// TODO not sending full file because the array doesnt get full bc end of file!
                                 System.out.println("Sending BlockNum:" + ftpServer.getBlockNumber(window.Data_Array[i]));
-                                window.add_Timer(i);//set timers
                             }
                         }else{
                             ftpServer.sock.send(window.Data_Array[i]);// TODO not sending full file because the array doesnt get full bc end of file!
                             System.out.println("Sending BlockNum:" + ftpServer.getBlockNumber(window.Data_Array[i]));
-                            window.add_Timer(i);//set timers
                         }
-//                        ByteBuffer buff = ByteBuffer.allocate(10);
-//                        DatagramPacket pa = new DatagramPacket(buff.array(), buff.array().length);
-//                        if (end_control==window.DataBuffer.size()){
-//                            System.out.println("File Transfer Complete");
-//                            System.exit(1);
-//                        }
-//                        System.out.println("Awaiting ACKS");
-//                        ftpServer.sock.receive(pa);
-//                        System.out.println("Ack Recieved!");
-//                        long acknum = window.getACKBlockNumber(pa);
-//                        System.out.println("ACK BLock Recieved:" + acknum);
-//
-//                        window.add_ACK(pa);
-//
-//                        window.removeByBlockNum(acknum);
-//
-//                        System.out.println("[null counter]:"+window.null_counter);
-//
-//                        int index = window.checkTimers();
-//
-//                        if (index != -1) {
-//                            System.out.println("[Resent!]");
-//                            ftpServer.sock.send(window.Data_Array[index]);
-//                        }
-//                        end_control++;
-
-
-
-
-
 
                     }catch (NullPointerException c){// Send a packet with a negative block number
                         ByteBuffer bb = ByteBuffer.allocate(512);
@@ -392,41 +368,49 @@ public class FTPServer {
                         break;
                     }
                 }
-                window.clearAcks();
 
 
                 //wait for ACK packet then check timers
-                while (window.ACK_Bookkeeping != window.size) {
+                for (int i = 0; i < window.size; i++) {
 
                     ByteBuffer buff = ByteBuffer.allocate(10);
                     DatagramPacket pa = new DatagramPacket(buff.array(), buff.array().length);
-                    if (end_control==window.DataBuffer.size()){
-                        System.out.println("File Transfer Complete");
-                        System.exit(1);
+                    try {
+                        System.out.println("Awaiting ACKS");
+                        ftpServer.sock.receive(pa);
+                        timout_Counter=0;
+                        System.out.println("Ack Recieved!");
+                        long acknum = window.getACKBlockNumber(pa);
+                        System.out.println("ACK BLock Recieved:" + acknum);
+                        window.add_ACK(pa);
+                        window.removeByBlockNum(acknum);
+                        end_control++;
+                        System.out.println("[null counter]:" + window.null_counter);
+                    }catch (SocketTimeoutException e){
+                        timout_Counter++;
+                        if(timout_Counter == 5){
+                            System.out.println("File Transfer Complete");
+                            System.exit(1);
+                        }
+                        break;
                     }
-                    System.out.println("Awaiting ACKS");
-                    ftpServer.sock.receive(pa);
-                    System.out.println("Ack Recieved!");
-                    long acknum = window.getACKBlockNumber(pa);
-                    System.out.println("ACK BLock Recieved:" + acknum);
 
-                    window.add_ACK(pa);
 
-                    window.removeByBlockNum(acknum);
-                    end_control++;
-                    System.out.println("[null counter]:"+window.null_counter);
-                    int index = window.checkTimers();
-                    if (index != -1) {
-                        System.out.println("[Resent!]");
-                        ftpServer.sock.send(window.Data_Array[index]);
-                    }
                     //check all timers
                 }
+
+                for (int i = 0; i <window.size ; i++) {
+                    if(window.Data_Array[i] != null){
+                        ftpServer.sock.send(window.Data_Array[i]);// TODO not sending full file because the array doesnt get full bc end of file!
+                        System.out.println("ReSending BlockNum:" + ftpServer.getBlockNumber(window.Data_Array[i]));
+                    }
+
+                }
+
                 window.clearAcks();
 
             }
         }
-
     }
 
 
