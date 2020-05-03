@@ -270,7 +270,7 @@ public class FTPServer {
 
         XOR = ftpServer.Auth();
         ByteBuffer buffer = ByteBuffer.allocate(269);
-        ftpServer.packetLoss = true;
+        ftpServer.packetLoss = Boolean.getBoolean(args[0]);
         DatagramPacket p = new DatagramPacket(buffer.array(),buffer.array().length);
         ftpServer.sock.receive(p);
         ftpServer.Unpack_Request(p);

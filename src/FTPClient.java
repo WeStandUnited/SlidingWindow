@@ -253,15 +253,22 @@ public class FTPClient {
 
     public static void main(String[] args) throws IOException {
         Scanner kb = new Scanner(System.in);
-        FTPClient ftpClient = new FTPClient(InetAddress.getByName("192.168.1.10"), false, 2770);
+
+        boolean V_Mode = Boolean.getBoolean(args[0]);
+        String file_name= args[1];
+        int DorUMode=Integer.getInteger(args[2]);
+        String address_local = args[3];
+        int port_local = Integer.getInteger(args[4]);
+
+
+
+        FTPClient ftpClient = new FTPClient(InetAddress.getByName(address_local), V_Mode, port_local);
         System.out.println("[Waiting to Auth]");
         XOR = ftpClient.Auth();
-        System.out.println("[Authed with]" + "\n" + "Host:" + address.getHostName() + "\n" + "Port:" + 2770);
+        System.out.println("[Authed with]" + "\n" + "Host:" + address.getHostName() + "\n" + "Port:" + port_local);
         System.out.println("Downloading from Server [2] or Uploading to Server [1]");
         MODE = kb.nextInt();
         ftpClient.windowSize = 10;
-//commanumbers.txt
-        String file_name = "commanumbers.txt";
         ftpClient.file = new File(file_name);
         boolean result = ftpClient.file.createNewFile();
 
