@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -62,8 +63,8 @@ public class SlideWindow{
         RandomAccessFile ra = new RandomAccessFile(file, "r");
 
 
-        for (long i = 0; i < file.length(); i +=510) {//changed i+= 510 -> i++
-            byte[] data = new byte[510];
+        for (long i = 0; i < file.length(); i +=504) {//changed i+= 510 -> i++
+            byte[] data = new byte[504];
 
             ra.seek(i);//changed from i -> i*510
 
@@ -72,13 +73,13 @@ public class SlideWindow{
             ByteBuffer buffer = ByteBuffer.allocate(512);
 
 
-            System.out.println("AddBlock_Num:"+i);
+         //   System.out.println("AddBlock_Num:"+i);
             buffer.putLong(i);
 
             String s = new String(data);
 
-            // System.out.println("[Placing]"+s);
-            //System.out.println(s.length());
+         //   System.out.println("[Placing]"+s);
+         //   System.out.println(s.length());
             buffer.put(data);
 
             buffer.flip();
@@ -86,7 +87,7 @@ public class SlideWindow{
             DatagramPacket packet;
 
             packet = new DatagramPacket(hash(buffer.array()), buffer.array().length,host, port);
-            System.out.println("Data Packet:"+packet.getLength());
+         //   System.out.println("Data Packet:"+packet.getLength());
             DataBuffer.add(packet);
             // System.out.println("[Data Buffer]Add:"+i);
             // System.out.println(new String(hash(packet.getData())));
@@ -109,21 +110,20 @@ public class SlideWindow{
         buff.put(raw_packet);
         buff.flip();
 
-        //buff.getShort();
+        buff.getShort();
 
         return buff.getLong();
     }
-    public Long getACKBlockNumber(DatagramPacket p){
+    public long getACKBlockNumber(DatagramPacket p){
 
-        int data_size = p.getLength();
 
         byte[] raw_packet = hash(p.getData());// NOTE : Unpack Functions have no need to unhash because of this
 
 
-
+        System.out.println("ACK Length:"+ raw_packet.length);
         //switch statement telling the bytes to
 
-        ByteBuffer buff = ByteBuffer.allocate(data_size);
+        ByteBuffer buff = ByteBuffer.allocate(10);
         buff.put(raw_packet);
         buff.flip();
 
@@ -156,8 +156,7 @@ public class SlideWindow{
         {
 
             if (Data_Array[i] == null){
-                //     System.out.println("[Data Array]:Add"+i);
-
+                     System.out.println("[Data Array]:Add"+i);
                 Data_Array[i] = p;
                 Data_Bookkeeping++;
 
@@ -187,7 +186,9 @@ public class SlideWindow{
             int lastvalue =0;
             for (int j = 0; j < Data_Array.length; j++) {
                 lastvalue = j;
-                add_Data(DataBuffer.get(j + null_counter), j);
+                if (Data_Array[j] == null) {
+                    add_Data(DataBuffer.get(j + null_counter), j);
+                }
             }
         } catch (IndexOutOfBoundsException a){
             return;
@@ -241,8 +242,7 @@ public class SlideWindow{
     }
     public boolean add_ACK(DatagramPacket p){
         //True in meaning successful
-        for (int i = size-1; i>-1 ; i--) {
-
+        for (int i = 0; i <size ; i++) {
             if (Ack_Array[i] == null){
 
                 Ack_Array[i] = p;
